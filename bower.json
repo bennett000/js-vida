@@ -1,0 +1,23 @@
+{
+  "name": "higgins-client",
+  "version": "1.24.0",
+  "description": "Simple JavaScript index.html builder, and data provider.  This basically allows you to build your index.html file on the fly with a JSON object.  This service can provide its bootstrapping data one time only, or multiple times.  This service will self destruct.",
+  "moduleType": [
+    "globals"
+  ],
+  "license": "?",
+  "homepage": "https://higgins.ai",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "lib",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {},
+  "dependencies": {
+    "angular": "~1.3"
+  }
+}
