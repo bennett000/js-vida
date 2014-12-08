@@ -15,6 +15,15 @@ angular.module('JSVida', [
     }
 
     return $window.THREE;
+}]).factory('_', ['$window', function ($window) {
+    'use strict';
+
+    /** @todo graceful error here */
+    if (!$window._) {
+        throw new ReferenceError('Fatal Error: underscore.js library not found');
+    }
+
+    return $window._;
 }]).factory('_renderer', ['three', function (three) {
     'use strict';
 
@@ -23,6 +32,8 @@ angular.module('JSVida', [
     'use strict';
 
     var renderer = _renderer,
+        /** @type {boolean} */
+        doStop = false,
         /** @type number */
         x = 0,
         /** @type number */
@@ -35,17 +46,17 @@ angular.module('JSVida', [
      */
     function size(newX, newY) {
         if (newX === undefined || newY === undefined) {
-            return { width: x, height: y};
+            return {width: x, height: y};
         }
         if (+newX < 0 || +newY < 0) {
-            return { width: x, height: y};
+            return {width: x, height: y};
         }
         x = +newX;
         y = +newY;
 
         renderer.setSize(x, y);
 
-        return { width: x, height: y};
+        return {width: x, height: y};
     }
 
     /**
@@ -74,13 +85,34 @@ angular.module('JSVida', [
         return y;
     }
 
+    /**
+     *  stops the rendering
+     */
+    function stop() {
+        doStop = true;
+    }
+
+    /**
+     * render loop
+     * @param scene {THREE.Scene}
+     * @param camera {THREE.Camera}
+     * @param onFrame {function(...)=}
+     */
     function start(scene, camera, onFrame) {
+        if (doStop) {
+            doStop = false;
+            return;
+        }
         requestAnimationFrame(function reStart() { start(scene, camera, onFrame); });
-        renderer.render(scene, camera)
-        onFrame();
+        renderer.render(scene, camera);
+
+        if (angular.isFunction(onFrame)) {
+            onFrame();
+        }
     }
 
     this.start = start;
+    this.stop = stop;
     this.size = size;
     this.x = accessX;
     this.y = accessY;
@@ -88,6 +120,124 @@ angular.module('JSVida', [
     this.height = accessY;
     this.renderer = renderer;
 
+}]).service('scene', ['three', 'renderer', function (three, renderer) {
+    'use strict';
+
+    var that = this;
+
+    function size() {
+        that.cameras.perspective = new three.PerspectiveCamera(75, renderer.x() / renderer.y(), 0.1, 1000);
+    }
+
+    this.scene = new three.Scene();
+    this.cameras = {
+        perspective: null
+    };
+    this.size = size;
+
+    size();
+
+}]).service('movement', ['scene', function (scene) {
+    'use strict';
+
+    var speed = 0.1;
+
+    function translate(axis, value) {
+        scene.cameras.perspective.position[axis] += value;
+    }
+
+    function rotate(axis, value) {
+        scene.cameras.perspective.rotation[axis] += value;
+    }
+
+    function positiveX() {
+        translate('x', speed);
+    }
+
+    function positiveY() {
+        translate('y', speed);
+    }
+
+    function positiveZ() {
+        translate('z', speed);
+    }
+
+    function negativeX() {
+        translate('x', speed * -1);
+    }
+
+    function negativeY() {
+        translate('y', speed * -1);
+    }
+
+    function negativeZ() {
+        translate('z', speed * -1);
+    }
+
+    function positiveYRotate() {
+        rotate('y', speed);
+    }
+
+    function negativeYRotate() {
+        rotate('y', speed * -1);
+    }
+
+    function positiveZRotate() {
+        rotate('z', speed);
+    }
+
+    function negativeZRotate() {
+        rotate('z', speed * -1);
+    }
+
+    function positiveXRotate() {
+        rotate('x', speed);
+    }
+
+    function negativeXRotate() {
+        rotate('x', speed * -1);
+    }
+
+    this.positiveX = positiveX;
+    this.positiveY = positiveY;
+    this.positiveZ = positiveZ;
+    this.negativeX = negativeX;
+    this.negativeY = negativeY;
+    this.negativeZ = negativeZ;
+    this.positiveYRotate = positiveYRotate;
+    this.negativeYRotate = negativeYRotate;
+    this.positiveZRotate = positiveZRotate;
+    this.negativeZRotate = negativeZRotate;
+    this.positiveXRotate = positiveXRotate;
+    this.negativeXRotate = negativeXRotate;
+
+}]).factory('simpleCube', ['three', function (three) {
+    'use strict';
+
+    function getCube() {
+        var geometry = new three.BoxGeometry(1, 1, 1),
+            material = new three.MeshBasicMaterial({color: 0x00ff00});
+
+        return new three.Mesh(geometry, material);
+    }
+
+    return getCube;
+
+}]).service('universe', ['scene', 'simpleCube', function (scene, simpleCube) {
+    'use strict';
+
+    var cubes = [simpleCube(), simpleCube(), simpleCube()];
+
+    function populate() {
+        cubes.forEach(function (cube, i) {
+            cube.position.x = i * 2;
+            scene.scene.add(cube);
+        });
+
+        scene.cameras.perspective.position.z = 5;
+    }
+
+    this.populate = populate;
 }]).directive('vida', [function () {
     'use strict';
 
@@ -96,7 +246,9 @@ angular.module('JSVida', [
         replace: true,
         template: '<div class="vida-main"><vida-menu></vida-menu><vida-view></vida-view></div>'
     };
-}]).directive('vidaView', ['renderer', 'three', function (renderer, three) {
+}]).directive('vidaView', ['renderer', 'scene', 'three', '$log', '$window', '_', 'movement', 'universe', function (renderer, scene, three, $log, $window, _, movement, universe) {
+    'use strict';
+
     var lastStyle,
         /** @const */
         shrinkConstant = 25,
@@ -108,42 +260,85 @@ angular.module('JSVida', [
 
         if (!lastStyle) {
             /** @todo clean up*/
-            console.error('Fatal Error: could not compute viewport size');
+            $log.error('Fatal Error: could not compute viewport size');
             return;
         }
 
         var x = lastStyle.width.substring(0, lastStyle.width.length - 2),
-        y = lastStyle.height.substring(0, lastStyle.height.length - 2);
+            y = lastStyle.height.substring(0, lastStyle.height.length - 2);
 
         x -= shrinkConstant;
         y -= shrinkConstant;
 
-        x = x/shrinkFactor;
-        y = y/shrinkFactor;
+        x = x / shrinkFactor;
+        y = y / shrinkFactor;
 
-        renderer.size(x, y);
+        renderer.size(+x, +y);
+        scene.size();
     }
 
     function linkVidaView(scope, elem) {
+        var debounceResize = _.debounce(onWindowResize, 150);
+
         size(elem);
 
-        var camera = new three.PerspectiveCamera( 75, renderer.x() / renderer.y(), 0.1, 1000),
-        scene = new three.Scene(),
-        geometry = new three.BoxGeometry(1, 1, 1),
-        material = new three.MeshBasicMaterial({ color: 0x00ff00}),
-        cube = new three.Mesh(geometry, material);
-
-        scene.add(cube);
-        camera.position.z = 5;
-
-        renderer.start(scene, camera, function () {
-            cube.rotation.x += 0.1;
-            cube.rotation.y += 0.01;
-            cube.rotation.z += 0.001;
-        });
-
+        renderer.start(scene.scene, scene.cameras.perspective);
+        universe.populate();
 
         angular.element(elem).append(renderer.renderer.domElement);
+
+        elem.on('$destroy', destroy);
+        $window.addEventListener('resize', debounceResize);
+        $window.addEventListener('keydown', onKey);
+
+        function onWindowResize() {
+            size(elem);
+        }
+
+        function onKey(val) {
+            switch (val.keyCode) {
+                case 65:
+                    // neg x
+                    movement.negativeX();
+                    break;
+                case 68:
+                    // pos x
+                    movement.positiveX();
+                    break;
+                case 87:
+                    // pos z
+                    movement.positiveZ();
+                    break;
+                case 83 :
+                    // neg z
+                    movement.negativeZ();
+                    break;
+                case 82:
+                    // pos y
+                    movement.positiveY();
+                    break;
+                case 70 :
+                    // neg u
+                    movement.negativeY();
+                    break;
+                case 84:
+                    // pos y
+                    movement.positiveXRotate();
+                    break;
+                case 71 :
+                    // neg u
+                    movement.negativeXRotate();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        function destroy() {
+            scene.stop();
+            $window.removeEventListener('resize', debounceResize);
+            $window.removeEventListener('keydown', onKey);
+        }
     }
 
     return {
@@ -151,5 +346,5 @@ angular.module('JSVida', [
         replace: true,
         link: linkVidaView,
         template: '<div class="vida-view"></div>'
-    }
+    };
 }]);

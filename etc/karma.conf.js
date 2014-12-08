@@ -16,6 +16,7 @@ module.exports = function (config) {
         files: [
             // libraries
             'lib/three.js/three.js',
+            'lib/underscore/underscore.js',
             'lib/angular/angular.js',
             'lib/angular-mocks/angular-mocks.js',
 

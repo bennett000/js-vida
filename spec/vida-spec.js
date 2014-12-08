@@ -1,4 +1,4 @@
-/*global describe, it, spyOn, expect, window, angular, module */
+/*global describe, it, spyOn, expect, window, angular, module, inject */
 
 describe('Renderer Service', function () {
     'use strict';
