@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# where are we?
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $DIR
+cd ..
+
+# bower deps!
+bower install
+
+# Try and get people to read the README
+cat  ./README.md 
