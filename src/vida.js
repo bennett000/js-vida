@@ -15,6 +15,10 @@ angular.module('JSVida', [
     }
 
     return $window.THREE;
+}]).factory('physi', ['$window', function ($window) {
+    'use strict';
+
+
 }]).factory('_', ['$window', function ($window) {
     'use strict';
 
@@ -211,11 +215,20 @@ angular.module('JSVida', [
     this.positiveXRotate = positiveXRotate;
     this.negativeXRotate = negativeXRotate;
 
+}]).factory('between', [function () {
+    'use strict';
+
+    function between(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    return between;
+
 }]).factory('simpleCube', ['three', function (three) {
     'use strict';
 
     function getCube() {
-        var geometry = new three.BoxGeometry(1, 1, 1),
+        var geometry = new three.CubeGeometry(1, 1, 1),
             material = new three.MeshBasicMaterial({color: 0x00ff00});
 
         return new three.Mesh(geometry, material);
@@ -223,21 +236,211 @@ angular.module('JSVida', [
 
     return getCube;
 
-}]).service('universe', ['scene', 'simpleCube', function (scene, simpleCube) {
+}]).factory('procomyte', ['simpleCube', 'between', 'scene', function (simpleCube, between, scene) {
     'use strict';
 
-    var cubes = [simpleCube(), simpleCube(), simpleCube()];
+    var lifespan = 10,
+        /** @const */
+        gcThreshold = 200,
+        speed = 1,
+        /** @const */
+        breedingFactor = 4,
+        /** @const */
+        senseRange = 2,
+        /** @const */
+        crowdThreshold = 3,
+        /** @const */
+        limit = 50000,
+        /** @type {number} */
+        population = 0,
+        /** @type Array */
+        species = [];
 
-    function populate() {
-        cubes.forEach(function (cube, i) {
-            cube.position.x = i * 2;
-            scene.scene.add(cube);
-        });
-
-        scene.cameras.perspective.position.z = 5;
+    /**
+     * Kills an organism from old age
+     * @param org {Object}
+     * @returns {boolean}
+     */
+    function expire(org) {
+        org.age += 1;
+        if (+org.age > (lifespan * 0.75)) {
+            if (between(0, 50) > 25) {
+                org.isAlive = false;
+                scene.scene.remove(org.avatar);
+                population -= 1;
+                return true;
+            }
+        }
+        return false;
     }
 
+    function proximity(org) {
+        var neighbours = [];
+
+        species.forEach(function (neighbour) {
+            var xdiff = Math.abs(org.avatar.position.x - neighbour.avatar.position.x),
+                zdiff = Math.abs(org.avatar.position.z - neighbour.avatar.position.z);
+
+            if ((xdiff <= senseRange) && (zdiff <= senseRange)) {
+                neighbours.push(neighbour);
+            }
+        });
+
+        if (neighbours.length === 0) {
+            return false;
+        }
+        if (neighbours.length >= crowdThreshold) {
+            return false;
+        }
+
+        if (org.age < (lifespan / breedingFactor)) {
+            return false;
+        }
+
+        makeProcomyte(org.avatar.position.x,
+                      org.avatar.position.y,
+                      org.avatar.position.z);
+
+        return true;
+    }
+
+    function roam(org) {
+        var direction = between(0, 100);
+
+        if (direction < 25) {
+            org.avatar.position.x += speed;
+            return;
+        }
+        if (direction < 50) {
+            org.avatar.position.x -= speed;
+            return;
+        }
+        if (direction < 75) {
+            org.avatar.position.z += speed;
+            return;
+        }
+        org.avatar.position.z -= speed;
+    }
+
+    /**
+     * Executes each turn
+     */
+    function turn() {
+        console.log('TURN', 'population', population, 'species', species.length);
+        species.forEach(function (org) {
+            if (org.isAlive === false) {
+                return;
+            }
+            if (expire(org)) { return; }
+            if (proximity(org)) { return; }
+            roam(org);
+        });
+    }
+
+
+    /**
+     * @param x {number}
+     * @param y {number}
+     * @param z {number}
+     */
+    function reuseProcomyte(x, y, z) {
+        var isDone = false;
+        species.forEach(function (org) {
+            if (isDone) {
+                return;
+            }
+            if (org.isAlive) {
+                return;
+            }
+            isDone = true;
+            org.avatar.position.x = x;
+            org.avatar.position.y = y;
+            org.avatar.position.z = z;
+            org.isAlive = true;
+            org.age = 0;
+            scene.scene.add(org.avatar);
+        });
+        return isDone;
+    }
+
+    /**
+     * @param x {number}
+     * @param y {number}
+     * @param z {number}
+     */
+    function newProcomyte(x, y, z) {
+        var avatar = simpleCube();
+        avatar.position.x = x;
+        avatar.position.y = y;
+        avatar.position.z = z;
+
+        species.push({
+                         isAlive: true,
+                         avatar: avatar,
+                         age: 0
+                     });
+        scene.scene.add(avatar);
+    }
+
+    function gc() {
+        species = species.filter(function (el) { return el.isAlive; });
+    }
+
+    /**
+     * @param x {number}
+     * @param y {number}
+     * @param z {number}
+     */
+    function makeProcomyte(x, y, z) {
+        if (population >= limit) {
+            /*global console*/
+            console.warn('Limit of ', limit, 'hit');
+            return;
+        }
+
+        population += 1;
+
+        if (reuseProcomyte(x, y, z)) {
+            if (species.length - population > gcThreshold) {
+                gc();
+            }
+            return;
+        }
+        newProcomyte(x, y, z);
+
+    }
+
+    makeProcomyte.species = species;
+    makeProcomyte.turn = turn;
+    makeProcomyte.limit = limit;
+
+    return makeProcomyte;
+}]).service('universe', ['scene', '$timeout', 'between', 'procomyte', function (scene, $timeout, between, procomyte) {
+    'use strict';
+
+    var speed = 250,
+        initPop = 15;
+
+
+    function populate() {
+        var i;
+        for (i = 0; i < initPop; i += 1) {
+            var x = between(initPop * -1, initPop),
+                z = between(initPop * -1, initPop);
+            procomyte(x, 0, z);
+        }
+
+        $timeout(turn, speed);
+    }
+
+    function turn() {
+        procomyte.turn();
+        $timeout(turn, speed);
+    }
+
+
     this.populate = populate;
+
 }]).directive('vida', [function () {
     'use strict';
 

@@ -19,7 +19,7 @@ tmp
 .idea/workspace.xml
 
 # libraries are managed by bower
-lib
+src/lib
 
 # build folder
 build

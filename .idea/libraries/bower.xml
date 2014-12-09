@@ -2,11 +2,12 @@
   <library name="bower" type="javaScript">
     <properties>
       <sourceFilesUrls>
-        <item url="file://$PROJECT_DIR$/lib" />
+        <item url="file://$PROJECT_DIR$/src/lib" />
       </sourceFilesUrls>
     </properties>
     <CLASSES>
       <root url="file://$PROJECT_DIR$/lib" />
+      <root url="file://$PROJECT_DIR$/src/lib" />
     </CLASSES>
     <SOURCES />
   </library>
