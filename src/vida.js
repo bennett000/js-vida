@@ -18,6 +18,12 @@ angular.module('JSVida', [
 }]).factory('physi', ['$window', function ($window) {
     'use strict';
 
+    /** @todo graceful error here */
+    if (!$window.Physijs) {
+        throw new ReferenceError('Fatal Error: physi.js library not found');
+    }
+
+    return $window.Physijs;
 
 }]).factory('_', ['$window', function ($window) {
     'use strict';
@@ -108,6 +114,7 @@ angular.module('JSVida', [
             return;
         }
         requestAnimationFrame(function reStart() { start(scene, camera, onFrame); });
+        scene.simulate();
         renderer.render(scene, camera);
 
         if (angular.isFunction(onFrame)) {
@@ -124,7 +131,7 @@ angular.module('JSVida', [
     this.height = accessY;
     this.renderer = renderer;
 
-}]).service('scene', ['three', 'renderer', function (three, renderer) {
+}]).service('scene', ['physi', 'three', 'renderer', function (physi, three, renderer) {
     'use strict';
 
     var that = this;
@@ -133,7 +140,8 @@ angular.module('JSVida', [
         that.cameras.perspective = new three.PerspectiveCamera(75, renderer.x() / renderer.y(), 0.1, 1000);
     }
 
-    this.scene = new three.Scene();
+
+    this.scene = new physi.Scene();
     this.cameras = {
         perspective: null
     };
@@ -236,25 +244,45 @@ angular.module('JSVida', [
 
     return getCube;
 
-}]).factory('procomyte', ['simpleCube', 'between', 'scene', function (simpleCube, between, scene) {
+}]).factory('physicsCube', ['three', 'physi', function (three, physi) {
     'use strict';
 
-    var lifespan = 10,
+    function getCube(callbacks) {
+        callbacks = callbacks || {};
+
+        var geometry = new three.CubeGeometry(1, 1, 1),
+            material = new three.MeshBasicMaterial({color: 0x00ff00}, 0.5),
+            box = new physi.BoxMesh(geometry, material);
+
+        if (angular.isFunction(callbacks.collision)) {
+            box.addEventListener('collision', callbacks.collision);
+        }
+
+        return box;
+    }
+
+    return getCube;
+
+}]).factory('procomyte', ['physicsCube', 'between', 'scene', '$timeout', 'three', function (physicsCube, between, scene, $timeout, three) {
+    'use strict';
+
+    var lifespan = 1000,
         /** @const */
         gcThreshold = 200,
         speed = 1,
+        offset = 1,
         /** @const */
         breedingFactor = 4,
-        /** @const */
-        senseRange = 2,
-        /** @const */
-        crowdThreshold = 3,
         /** @const */
         limit = 50000,
         /** @type {number} */
         population = 0,
         /** @type Array */
-        species = [];
+        species = [],
+        /** @const */
+        initPop = 15,
+        /** @const */
+        aiTick = 250;
 
     /**
      * Kills an organism from old age
@@ -274,67 +302,77 @@ angular.module('JSVida', [
         return false;
     }
 
-    function proximity(org) {
-        var neighbours = [];
-
-        species.forEach(function (neighbour) {
-            var xdiff = Math.abs(org.avatar.position.x - neighbour.avatar.position.x),
-                zdiff = Math.abs(org.avatar.position.z - neighbour.avatar.position.z);
-
-            if ((xdiff <= senseRange) && (zdiff <= senseRange)) {
-                neighbours.push(neighbour);
-            }
-        });
-
-        if (neighbours.length === 0) {
+    function onCollision(org, other) {
+        console.log('on collision');
+        if (!other.vidaMeta) {
+            return;
+        }
+        if (org.didRecentBreed === true) {
             return false;
         }
-        if (neighbours.length >= crowdThreshold) {
+        if ((org.age < (lifespan / breedingFactor)) && (other.vidaMeta.age < (lifespan / breedingFactor))) {
             return false;
         }
 
-        if (org.age < (lifespan / breedingFactor)) {
-            return false;
-        }
+        org.didRecentBreed = true;
+        other.vidaMeta.didRecentBreed = true;
 
         makeProcomyte(org.avatar.position.x,
                       org.avatar.position.y,
                       org.avatar.position.z);
 
-        return true;
+
     }
+
 
     function roam(org) {
         var direction = between(0, 100);
 
         if (direction < 25) {
-            org.avatar.position.x += speed;
+            org.avatar.applyImpulse(new three.Vector3(speed, 0, 0),
+                                  new three.Vector3(org.avatar.x + offset, org.avatar.y, org.avatar.z));
+            //org.avatar.position.x += speed;
+            //org.avatar.__dirtyPosition = true;
             return;
         }
         if (direction < 50) {
-            org.avatar.position.x -= speed;
+            org.avatar.applyImpulse(new three.Vector3(speed * -1, 0, 0),
+                                  new three.Vector3(org.avatar.x - offset, org.avatar.y, org.avatar.z));
+            //org.avatar.position.x -= speed;
+            //org.avatar.__dirtyPosition = true;
             return;
         }
         if (direction < 75) {
-            org.avatar.position.z += speed;
+            org.avatar.applyImpulse(new three.Vector3(0, 0, speed),
+                                  new three.Vector3(org.avatar.x, org.avatar.y, org.avatar.z + offset));
+            //org.avatar.position.z += speed;
+            //org.avatar.__dirtyPosition = true;
             return;
         }
-        org.avatar.position.z -= speed;
+        org.avatar.applyImpulse(new three.Vector3(0, 0, speed * -1),
+                              new three.Vector3(org.avatar.x, org.avatar.y, org.avatar.z - offset));
+        //org.avatar.position.z -= speed;
+        //org.avatar.__dirtyPosition = true;
     }
 
     /**
      * Executes each turn
      */
     function turn() {
-        console.log('TURN', 'population', population, 'species', species.length);
+        //scene.scene.simulate();
         species.forEach(function (org) {
             if (org.isAlive === false) {
                 return;
             }
+            if (org.didRecentBreed) {
+                // reset last breed param
+                org.didRecentBreed = false;
+            }
             if (expire(org)) { return; }
-            if (proximity(org)) { return; }
             roam(org);
         });
+
+        $timeout(turn, aiTick);
     }
 
 
@@ -369,16 +407,19 @@ angular.module('JSVida', [
      * @param z {number}
      */
     function newProcomyte(x, y, z) {
-        var avatar = simpleCube();
+        var organism = {
+                isAlive: true,
+                age: 0
+            },
+            avatar = physicsCube({collision: function (other) { onCollision(organism, other); }});
         avatar.position.x = x;
         avatar.position.y = y;
         avatar.position.z = z;
+        avatar.vidaMeta = organism;
 
-        species.push({
-                         isAlive: true,
-                         avatar: avatar,
-                         age: 0
-                     });
+        organism.avatar = avatar;
+
+        species.push(organism);
         scene.scene.add(avatar);
     }
 
@@ -407,39 +448,54 @@ angular.module('JSVida', [
             return;
         }
         newProcomyte(x, y, z);
+        //if (species.length - population > gcThreshold) {
+        //    gc();
+        //}
 
     }
+
+
+    function populate() {
+        var i, x, z;
+        for (i = 0; i < initPop; i += 1) {
+            x = between(initPop * -1, initPop);
+            z = between(initPop * -1, initPop);
+            makeProcomyte(x, 3, z);
+        }
+
+        $timeout(turn, aiTick);
+    }
+
+    populate();
+
 
     makeProcomyte.species = species;
     makeProcomyte.turn = turn;
     makeProcomyte.limit = limit;
 
     return makeProcomyte;
-}]).service('universe', ['scene', '$timeout', 'between', 'procomyte', function (scene, $timeout, between, procomyte) {
+}]).service('universe', ['scene', 'between', 'physi', 'three', function (scene, between, physi, three) {
     'use strict';
 
-    var speed = 250,
-        initPop = 15;
+    var ground = new physi.BoxMesh(
+    new three.CubeGeometry(500, 1, 500),
+    new three.MeshBasicMaterial({color: 0x333333}, 0.5),
+    0
+    );
+
+    ground.addEventListener('collision', function () {
+        console.log('ground was hit');
+    });
+
+    ground.position.y = -1;
+
+    scene.scene.add(ground);
 
 
-    function populate() {
-        var i;
-        for (i = 0; i < initPop; i += 1) {
-            var x = between(initPop * -1, initPop),
-                z = between(initPop * -1, initPop);
-            procomyte(x, 0, z);
-        }
+}]).run(['universe', 'procomyte', function (universe, procomyte) {
+    'use strict';
 
-        $timeout(turn, speed);
-    }
-
-    function turn() {
-        procomyte.turn();
-        $timeout(turn, speed);
-    }
-
-
-    this.populate = populate;
+    // go
 
 }]).directive('vida', [function () {
     'use strict';
@@ -449,7 +505,7 @@ angular.module('JSVida', [
         replace: true,
         template: '<div class="vida-main"><vida-menu></vida-menu><vida-view></vida-view></div>'
     };
-}]).directive('vidaView', ['renderer', 'scene', 'three', '$log', '$window', '_', 'movement', 'universe', function (renderer, scene, three, $log, $window, _, movement, universe) {
+}]).directive('vidaView', ['renderer', 'scene', 'three', '$log', '$window', '_', 'movement', function (renderer, scene, three, $log, $window, _, movement) {
     'use strict';
 
     var lastStyle,
@@ -486,7 +542,8 @@ angular.module('JSVida', [
         size(elem);
 
         renderer.start(scene.scene, scene.cameras.perspective);
-        universe.populate();
+        scene.cameras.perspective.position.y = 10;
+        scene.cameras.perspective.position.z = 20;
 
         angular.element(elem).append(renderer.renderer.domElement);
 
