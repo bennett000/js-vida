@@ -55,80 +55,6 @@ angular.module('JSVida', [
     }
 
     return $window._;
-}]).service('movement', ['scene', function (scene) {
-    'use strict';
-
-    var speed = 0.1;
-
-    function translate(axis, value) {
-        scene.cameras.perspective.position[axis] += value;
-    }
-
-    function rotate(axis, value) {
-        scene.cameras.perspective.rotation[axis] += value;
-    }
-
-    function positiveX() {
-        translate('x', speed);
-    }
-
-    function positiveY() {
-        translate('y', speed);
-    }
-
-    function positiveZ() {
-        translate('z', speed);
-    }
-
-    function negativeX() {
-        translate('x', speed * -1);
-    }
-
-    function negativeY() {
-        translate('y', speed * -1);
-    }
-
-    function negativeZ() {
-        translate('z', speed * -1);
-    }
-
-    function positiveYRotate() {
-        rotate('y', speed);
-    }
-
-    function negativeYRotate() {
-        rotate('y', speed * -1);
-    }
-
-    function positiveZRotate() {
-        rotate('z', speed);
-    }
-
-    function negativeZRotate() {
-        rotate('z', speed * -1);
-    }
-
-    function positiveXRotate() {
-        rotate('x', speed);
-    }
-
-    function negativeXRotate() {
-        rotate('x', speed * -1);
-    }
-
-    this.positiveX = positiveX;
-    this.positiveY = positiveY;
-    this.positiveZ = positiveZ;
-    this.negativeX = negativeX;
-    this.negativeY = negativeY;
-    this.negativeZ = negativeZ;
-    this.positiveYRotate = positiveYRotate;
-    this.negativeYRotate = negativeYRotate;
-    this.positiveZRotate = positiveZRotate;
-    this.negativeZRotate = negativeZRotate;
-    this.positiveXRotate = positiveXRotate;
-    this.negativeXRotate = negativeXRotate;
-
 }]).factory('between', [function () {
     'use strict';
 
@@ -163,6 +89,6 @@ angular.module('JSVida', [
     return {
         restrict: 'E',
         replace: true,
-        template: '<div class="vida-main"><vida-menu></vida-menu><vida-view></vida-view></div>'
+        template: '<div class="vida-main"><vida-menu></vida-menu><vida-camera-0></vida-camera-0></div>'
     };
-}]);
+}])
