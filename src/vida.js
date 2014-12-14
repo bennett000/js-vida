@@ -144,6 +144,6 @@ angular.module('JSVida', [
     return {
         restrict: 'E',
         replace: true,
-        template: '<div class="vida-main"><vida-menu></vida-menu><vida-view></vida-view></div>'
+        template: '<div class="vida-main"><vida-menu></vida-menu><vida-camera-0></vida-camera-0></div>'
     };
-}]);
+}])

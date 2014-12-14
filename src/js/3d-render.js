@@ -130,7 +130,7 @@ angular.module('JSVida-3d-Render', [
 
     size();
 
-}]).directive('vidaView', ['renderer', 'scene', 'three', '$log', '$window', '_', 'movement', function (renderer, scene, three, $log, $window, _, movement) {
+}]).directive('vidaCamera0', ['renderer', 'scene', 'three', '$log', '$window', '_', 'movement', function (renderer, scene, three, $log, $window, _, movement) {
     'use strict';
 
     var lastStyle,
@@ -230,6 +230,6 @@ angular.module('JSVida-3d-Render', [
         restrict: 'E',
         replace: true,
         link: linkVidaView,
-        template: '<div class="vida-view"></div>'
+        template: '<div class="vida-camera-0"></div>'
     };
 }]);
