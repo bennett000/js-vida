@@ -130,7 +130,7 @@ angular.module('JSVida-3d-Render', [
 
     size();
 
-}]).directive('vidaCamera0', ['renderer', 'scene', 'three', '$log', '$window', '_', 'movement', function (renderer, scene, three, $log, $window, _, movement) {
+}]).directive('vidaCamera0', ['renderer', 'scene', 'three', '$log', '$window', '_', function (renderer, scene, three, $log, $window, _) {
     'use strict';
 
     var lastStyle,
@@ -162,67 +162,45 @@ angular.module('JSVida-3d-Render', [
     }
 
     function linkVidaView(scope, elem) {
-        var debounceResize = _.debounce(onWindowResize, 150);
+        var debounceResize = _.debounce(onWindowResize, 150),
+        controls;
 
+        // initialize the window/size
         size(elem);
 
-        renderer.start(scene.scene, scene.cameras.perspective);
-        scene.cameras.perspective.position.y = 10;
-        scene.cameras.perspective.position.z = 20;
-
-        angular.element(elem).append(renderer.renderer.domElement);
-
+        // setup listeners
         elem.on('$destroy', destroy);
         $window.addEventListener('resize', debounceResize);
-        $window.addEventListener('keydown', onKey);
+
+        // setup controls
+        controls = new three.TrackballControls(scene.cameras.perspective);
+        controls.rotateSpeed = 1.0;
+        controls.zoomSpeed = 1.2;
+        controls.panSpeed = 0.8;
+        controls.noZoom = false;
+        controls.noPan = false;
+        controls.staticMoving = true;
+        controls.dynamicDampingFactor = 0.3;
+        controls.keys = [ 65, 83, 68 ];
+
+        controls.addEventListener('change', function () {
+            renderer.renderer.render(scene.scene, scene.cameras.perspective);
+        });
+
+        // draw
+        renderer.start(scene.scene, scene.cameras.perspective, controls.update);
+        angular.element(elem).append(renderer.renderer.domElement);
+        scene.cameras.perspective.position.y = 10;
+        scene.cameras.perspective.position.z = 20;
 
         function onWindowResize() {
             size(elem);
         }
 
-        function onKey(val) {
-            switch (val.keyCode) {
-                case 65:
-                    // neg x
-                    movement.negativeX();
-                    break;
-                case 68:
-                    // pos x
-                    movement.positiveX();
-                    break;
-                case 87:
-                    // pos z
-                    movement.positiveZ();
-                    break;
-                case 83 :
-                    // neg z
-                    movement.negativeZ();
-                    break;
-                case 82:
-                    // pos y
-                    movement.positiveY();
-                    break;
-                case 70 :
-                    // neg u
-                    movement.negativeY();
-                    break;
-                case 84:
-                    // pos y
-                    movement.positiveXRotate();
-                    break;
-                case 71 :
-                    // neg u
-                    movement.negativeXRotate();
-                    break;
-                default:
-                    break;
-            }
-        }
-
         function destroy() {
             scene.stop();
             $window.removeEventListener('resize', debounceResize);
-            $window.removeEventListener('keydown', onKey);
+            controls = null;
         }
     }
 

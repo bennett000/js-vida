@@ -78,7 +78,6 @@ angular.module('JSVida-Organism-Procomyte', [
         }
 
         if (other.vidaMeta.wasHit) {
-            console.log('other hit');
             return;
         }
         org.hitBreeder = org.hitBreeder || 0;
