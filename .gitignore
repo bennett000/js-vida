@@ -24,5 +24,9 @@ src/lib
 # build folder
 build
 
+# exclude images
+src/images
+
+
 # coverage folder
 coverage

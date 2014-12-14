@@ -12,5 +12,5 @@ angular.module('JSVida-Menus', [
         restrict: 'E',
         replace: true,
         template: '<div class="vida-menu"></div>'
-    }
+    };
 }]);
