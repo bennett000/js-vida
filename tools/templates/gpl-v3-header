@@ -1,27 +1,4 @@
-Vida
-====
-
-Vida is some JavaScript fun that's inspired by Conway's life.
-
-## Supported Platforms
-
-* The client _should_ run on any WebGL enabled browser
-* The dev environment is geared to GNU/Linux, UNIX, MacOS, etc however it's
-mostly just node dependencies, and could theoretically be run on Windows.
-
-## Running
-
-* clone repo
-* npm install
-
-## Building
-
-* type `grunt` from the project folder
-* grunt --help for all options
-
-
-## License
-
+    @license
     Vida - Conway inspired life game
     Copyright © 2014 Michael Bennett
 
@@ -39,4 +16,3 @@ mostly just node dependencies, and could theoretically be run on Windows.
 
     You should have received a copy of the GNU General Public License
     along with Vida.  If not, see <http://www.gnu.org/licenses/>.
-

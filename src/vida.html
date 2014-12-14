@@ -1,26 +1,44 @@
 <!doctype html>
 <html lang="en" ng-app="JSVida">
-  <!--
-   ___      ___  __     ________       __      
-   |"  \    /"  ||" \   |"      "\     /""\     
-    \   \  //  / ||  |  (.  ___  :)   /    \    
-     \\  \/. ./  |:  |  |: \   ) ||  /' /\  \   
-      \.    //   |.  |  (| (___\ || //  __'  \  
-       \\   /    /\  |\ |:       :)/   /  \\  \ 
-        \__/    (__\_|_)(________/(___/    \___)
+<!--
+ ___      ___  __     ________       __
+ |"  \    /"  ||" \   |"      "\     /""\
+  \   \  //  / ||  |  (.  ___  :)   /    \
+   \\  \/. ./  |:  |  |: \   ) ||  /' /\  \
+    \.    //   |.  |  (| (___\ || //  __'  \
+     \\   /    /\  |\ |:       :)/   /  \\  \
+      \__/    (__\_|_)(________/(___/    \___)
 
-  Copyright (c) 2014 Michael Bennett
-  -->
+
+    @license
+    Vida - Conway inspired life game
+    Copyright © 2014 Michael Bennett
+
+    This file is part of Vida.
+
+    Vida is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Vida is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Vida.  If not, see <http://www.gnu.org/licenses/>.
+-->
 
 <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-        <title>Vida</title>
-        <meta name="mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-capable" content="yes"/>
-        <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
-        <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
-        <meta name="viewport"
-              content="initial-scale=1.0, height=device-height, width=device-width, maximum-scale=1.0, user-scalable=0, minimal-ui,  maximum-scale=1.0"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>Vida</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
+    <meta name="viewport"
+          content="initial-scale=1.0, height=device-height, width=device-width, maximum-scale=1.0, user-scalable=0, minimal-ui,  maximum-scale=1.0"/>
     <!-- "app" icons -->
     <link rel="shortcut icon" sizes="196x196" href="/img/H_logo_196x196.png">
     <link rel="apple-touch-icon"
@@ -64,7 +82,26 @@
 <body>
 <noscript>
     Sorry, but Vida is a client side application, and requires ECMAScript
-    (JavaScript) to be enabled.  Vida is FLOSS, so feel free to have a look.
+    (JavaScript) to be enabled. Vida is FLOSS, so feel free to have a look.
+
+    Vida - Conway inspired life game
+    Copyright © 2014 Michael Bennett
+
+    This file is part of Vida.
+
+    Vida is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Vida is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Vida. If not, see <a href="http://www.gnu.org/licenses/"
+                                    title="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.
 </noscript>
 
 <vida></vida>
@@ -73,7 +110,8 @@
 <script src="/lib/three.js/three.js"></script>
 <script src="/js/lib-track-control.js"></script>
 <script src="/lib/physijs/physi.js"></script>
-<script>Physijs.scripts.worker='/lib/physijs/physijs_worker.js';Physijs.scripts.ammo='/lib/ammo.js/builds/ammo.js'</script>
+<script>Physijs.scripts.worker = '/lib/physijs/physijs_worker.js';
+Physijs.scripts.ammo = '/lib/ammo.js/builds/ammo.js'</script>
 <script src="/lib/underscore/underscore.js"></script>
 <script src="/lib/angular/angular.js"></script>
 <script src="/vida.js"></script>
