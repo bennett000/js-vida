@@ -17,13 +17,13 @@ angular.module('JSVida-Organism-Procomyte', [
         speed = 2,
         offset = 1,
         /** @const */
-        hitLimit = 4,
+        hitLimit = 3,
         /** @const */
         breedingMin = 1,
         /** @const */
         breedingFactor = 3,
         /** @const */
-        limit = 50000,
+        limitPop = 1000,
         /** @type {number} */
         population = 0,
         /** @type Array */
@@ -233,9 +233,9 @@ angular.module('JSVida-Organism-Procomyte', [
      * @param z {number}
      */
     function makeProcomyte(x, y, z) {
-        if (population >= limit) {
+        if (population >= limitPop) {
             /*global console*/
-            console.warn('Limit of ', limit, 'hit');
+            console.warn('Limit of ', limitPop, 'hit');
             return;
         }
 
@@ -271,7 +271,7 @@ angular.module('JSVida-Organism-Procomyte', [
 
     makeProcomyte.species = species;
     makeProcomyte.turn = turn;
-    makeProcomyte.limit = limit;
+    makeProcomyte.limit = limitPop;
 
     return makeProcomyte;
 }]);
