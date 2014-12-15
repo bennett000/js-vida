@@ -123,5 +123,32 @@ Physijs.scripts.ammo = '/lib/ammo.js/builds/ammo.js'</script>
 <script src="/js/3d-objects.js"></script>
 <script src="/js/3d-render.js"></script>
 <script src="/js/org-procomyte.js"></script>
+
+<!-- Production -->
+ <!--<script src="/vida.js"></script> -->
+<!-- END Production -->
+<!-- DEBUG -->
+<script src="/manifest.js"></script>
+<script>
+    function buildJSSync(target, files) {
+        var el;
+        // do nothing if there are no files!
+        if (files.length < 1) { return; }
+
+        // create an element
+        el = window.document.createElement('script');
+
+        // add the next element _after_ this one loads
+        el.onload = function jsSyncNext() {
+            buildJSSync(target, files.slice(1));
+        };
+
+        // add the source file, and inject the script!
+        el.setAttribute('src', files[0]);
+        window.document.getElementsByTagName(target)[0].appendChild(el);
+    }
+    buildJSSync([].concat(BOOTSTRAP.lib).concat(BOOTSTRAP.src));
+</script>
+<!-- END DEBUG BUILD ->
 </body>
 </html>
