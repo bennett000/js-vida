@@ -15,3 +15,8 @@ var BOOTSTRAP = Object.freeze({
     '/js/org-procomyte.js'
   ]
 });
+
+if (typeof module !== 'undefined') {
+  /*global module*/
+  module.exports = BOOTSTRAP;
+}

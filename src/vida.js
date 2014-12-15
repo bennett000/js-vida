@@ -91,4 +91,4 @@ angular.module('JSVida', [
         replace: true,
         template: '<div class="vida-main"><vida-menu></vida-menu><vida-camera-0></vida-camera-0></div>'
     };
-}])
+}]);
