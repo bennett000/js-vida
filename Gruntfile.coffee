@@ -2,6 +2,10 @@
 #
 #
 
+# Make sure your system has Google's closure compiler
+pathCC = '/usr/local/lib/closure-compiler'
+
+# @todo move all configurable strings up here
 pathRoot = __dirname + '/src'
 prefixPath = (file) -> pathRoot + file
 manifest = require(pathRoot + '/manifest.js')
@@ -13,10 +17,28 @@ vidaJS.to = '<script src="/vida.js"></script>'
 vidaHTML = {}
 vidaHTML.src = 'tmp/index.html'
 vidaHTML.dest = 'build/index.html'
+vidaSrc = []
+vidaSrc = vidaSrc.concat manifest.lib.map prefixPath
+vidaSrc = vidaSrc.concat manifest.src.map prefixPath
 
+# actually configure the grunt tasks
 module.exports = (grunt) ->
   grunt.initConfig
     pkg: grunt.file.readJSON 'package.json'
+
+    'closure-compiler':
+      frontend:
+        closurePath: pathCC
+        js: vidaSrc
+        jsOutputFile: 'build/vida.js'
+        maxBuffer: 500,
+        noreport: true
+        options:
+          compilation_level: 'SIMPLE_OPTIMIZATIONS'
+          language_in: 'ECMASCRIPT5_STRICT'
+          # https://www.npmjs.com/package/grunt-append-sourcemapping
+          #create_source_map: 'build/vida.js.map'
+          #source_map_format: 'V3'
 
     strip_code:
       options:
@@ -49,6 +71,14 @@ module.exports = (grunt) ->
       vida:
         files: vidaCSS
 
+    concat:
+      vidaPhysiWorker:
+        src: ['src/lib/physijs/physijs_worker.js']
+        dest: 'build/lib/physijs/physijs_worker.js'
+      vidaAmmo:
+        src: ['src/lib/ammo.js/builds/ammo.js']
+        dest: 'build/lib/ammo.js/builds/ammo.js'
+
     karma:
       unit:
         configFile: 'etc/karma.conf.js'
@@ -59,15 +89,17 @@ module.exports = (grunt) ->
   # 'Natural' tasks
   grunt.loadNpmTasks 'grunt-karma'
   grunt.loadNpmTasks 'grunt-contrib-cssmin'
+  grunt.loadNpmTasks 'grunt-contrib-concat'
   grunt.loadNpmTasks 'grunt-contrib-jshint'
   grunt.loadNpmTasks 'grunt-insert'
   grunt.loadNpmTasks 'grunt-text-replace'
   grunt.loadNpmTasks 'grunt-strip-code'
+  grunt.loadNpmTasks 'grunt-closure-compiler'
 
   # Alias tasks
   grunt.registerTask 'test', '', ['karma']
   grunt.registerTask 'test-unit', '', ['karma']
-  grunt.registerTask 'build-no-test', 'Build but skip tests', ['cssmin', 'replace', 'insert', 'strip_code']
+  grunt.registerTask 'build-no-test', 'Build but skip tests', ['concat', 'closure-compiler', 'cssmin', 'replace', 'insert', 'strip_code']
   grunt.registerTask 'build', 'Build for production', ['test', 'jshint', 'build-no-test']
 
   grunt.registerTask 'default', ['build']

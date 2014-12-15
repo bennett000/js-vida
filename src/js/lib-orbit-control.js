@@ -1,4 +1,9 @@
 /**
+ *  This file is a *dependency* of Vida, and is *not* part of the actual source
+ *
+ *  This file has no known repository, which is why it is here, and not in lib
+ */
+/**
  * @author qiao / https://github.com/qiao
  * @author mrdoob / http://mrdoob.com
  * @author alteredq / http://alteredqualia.com/

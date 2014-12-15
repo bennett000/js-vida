@@ -2,7 +2,6 @@
  * file: 3d-objects
  * Created by michael on 14/12/14.
  *
- @license
  Vida - Conway inspired life game
  Copyright © 2014 Michael Bennett
 
