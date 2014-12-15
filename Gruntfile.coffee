@@ -97,9 +97,10 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-closure-compiler'
 
   # Alias tasks
-  grunt.registerTask 'test', '', ['karma']
-  grunt.registerTask 'test-unit', '', ['karma']
+  grunt.registerTask 'test', 'Unit, and end to end tests', ['jshint', 'test-unit', 'test-e2e']
+  grunt.registerTask 'test-e2e', 'End to end tests', []
+  grunt.registerTask 'test-unit', 'Unit tests', ['karma']
   grunt.registerTask 'build-no-test', 'Build but skip tests', ['concat', 'closure-compiler', 'cssmin', 'replace', 'insert', 'strip_code']
-  grunt.registerTask 'build', 'Build for production', ['test', 'jshint', 'build-no-test']
+  grunt.registerTask 'build', 'Build for production', ['test', 'build-no-test']
 
   grunt.registerTask 'default', ['build']

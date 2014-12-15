@@ -1,6 +1,9 @@
 // Karma configuration
 // Generated on Tue Feb 04 2014 21:57:25 GMT-0500 (EST)
 
+/*global require, module */
+var manifest = require('../src/manifest.js');
+
 module.exports = function (config) {
     'use strict';
 
@@ -13,11 +16,9 @@ module.exports = function (config) {
         // frameworks to use
         frameworks: ['jasmine'],
 
-        files: [
-            // libraries
-            'src/lib/three.js/three.js',
-            'src/lib/underscore/underscore.js',
-            'src/lib/angular/angular.js',
+        files: manifest.lib.map(function (file) {
+           return 'src/' + file;
+        }).concat([
             'src/lib/angular-mocks/angular-mocks.js',
 
             // source
@@ -25,8 +26,8 @@ module.exports = function (config) {
             'src/js/**/*.js',
 
             // mocks & specs
-            'spec/*-spec.js'
-        ],
+            'spec/unit/*-spec.js'
+        ]),
 
         // list of files to exclude
         exclude: [

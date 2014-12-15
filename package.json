@@ -35,8 +35,8 @@
   },
   "dependencies": {},
   "scripts": {
-    "start": "node tools/static-http-server.js",
+    "start": "tools/serve-release",
     "postinstall": "tools/bootstrap",
-    "test": "scripts/test"
+    "test": "tools/test"
   }
 }
