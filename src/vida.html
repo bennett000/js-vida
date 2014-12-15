@@ -110,20 +110,6 @@
 
 <vida></vida>
 
-<!--<script src="/lib/threejs/build/three.js"></script>-->
-<script src="/lib/three.js/three.js"></script>
-<script src="/js/lib-track-control.js"></script>
-<script src="/lib/physijs/physi.js"></script>
-<script>Physijs.scripts.worker = '/lib/physijs/physijs_worker.js';
-Physijs.scripts.ammo = '/lib/ammo.js/builds/ammo.js'</script>
-<script src="/lib/underscore/underscore.js"></script>
-<script src="/lib/angular/angular.js"></script>
-<script src="/vida.js"></script>
-<script src="/js/menu.js"></script>
-<script src="/js/3d-objects.js"></script>
-<script src="/js/3d-render.js"></script>
-<script src="/js/org-procomyte.js"></script>
-
 <!-- Production -->
  <!--<script src="/vida.js"></script> -->
 <!-- END Production -->
@@ -147,7 +133,7 @@ Physijs.scripts.ammo = '/lib/ammo.js/builds/ammo.js'</script>
         el.setAttribute('src', files[0]);
         window.document.getElementsByTagName(target)[0].appendChild(el);
     }
-    buildJSSync([].concat(BOOTSTRAP.lib).concat(BOOTSTRAP.src));
+    buildJSSync('body', [].concat(BOOTSTRAP.lib).concat(BOOTSTRAP.src));
 </script>
 <!-- END DEBUG BUILD ->
 </body>
