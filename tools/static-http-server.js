@@ -1,5 +1,6 @@
+/*global __dirname, require, console */
 var connect = require('connect'),
-port = 8080,
+port = 8081,
 path = __dirname +'/../src/';
 
 connect(
