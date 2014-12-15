@@ -41,17 +41,37 @@ the edge of the map.
 * The client _should_ run on any WebGL enabled browser
 * The dev environment is geared to GNU/Linux, UNIX, MacOS, etc however it's
 mostly just node dependencies, and could theoretically be run on Windows.
+** This includes local services
 
-## Running
+## Running Locally
 
 * clone repo
 * npm install
+* run `tools/serve-release`
+* navigate a browser to http://localhost:8080
+** local service is in no way intended for production use
+
+### Debugging
+
+This will setup a local server that runs code straight from the `src` folder,
+this service is even _less_ suited to production service than the release
+service.
+
+* run `tools/serve-debug`
+* navigate a browser to http://localhost:8082
+
+## Testing
+
+* type `grunt test` from the project folder, to run the test suite
+* type `grunt test-unit` from the project folder, to run only the unit tests
+* type `grunt test-e2e` from the project folder, to run only the e2e tests
 
 ## Building
 
-* type `grunt` from the project folder
-* grunt --help for all options
-
+* type `grunt build` from the project folder, to build the client
+* type `grunt build-no-test` from the project folder, to build the client, and
+skip the _mandatory_ testing
+* `grunt --help` for all options
 
 ## License
 
