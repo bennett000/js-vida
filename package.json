@@ -3,6 +3,12 @@
   "description": "Something like Conway's life",
   "version": "0.2.0",
   "private": false,
+  "license":   [
+    {
+      "type": "GPLv3",
+      "url": "http://www.gnu.org/licenses/gpl-3.0.html"
+    }
+  ],
   "repository": {
     "type": "git",
     "url": "ssh://michaeljbennett.info/repo/js-vida.git"
