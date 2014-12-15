@@ -78,10 +78,13 @@
             background-color: black;
             margin: 0;
         }
+        /**###CSSBUILDLOCATION */
     </style>
 
     <link rel="icon" href="favicon.ico" sizes="16x16" type="image/vnd.microsoft.icon" />
+    <!-- /* start-debug-block */ -->
     <link rel="stylesheet" href="css/vida.css"/>
+    <!-- /* end-debug-block */ -->
 </head>
 <body>
 <noscript>
@@ -111,9 +114,9 @@
 <vida></vida>
 
 <!-- Production -->
- <!--<script src="/vida.js"></script> -->
+<!--###BUILDSCRIPT-->
 <!-- END Production -->
-<!-- DEBUG -->
+<!-- /* start-debug-block */ -->
 <script src="/manifest.js"></script>
 <script>
     function buildJSSync(target, files) {
@@ -135,6 +138,6 @@
     }
     buildJSSync('body', [].concat(BOOTSTRAP.lib).concat(BOOTSTRAP.src));
 </script>
-<!-- END DEBUG BUILD ->
+<!-- /* end-debug-block */ -->
 </body>
 </html>
