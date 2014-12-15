@@ -1,7 +1,7 @@
 {
   "name": "vida",
   "version": "0.2.0",
-  "description": "something like conway's life",
+  "description": "Evolution themed game inspired by Conway's Life",
   "moduleType": [
     "globals"
   ],

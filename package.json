@@ -1,6 +1,6 @@
 {
   "name": "js-vida",
-  "description": "Something like Conway's life",
+  "description": "Evolution themed game inspired by Conway's Life",
   "version": "0.2.0",
   "private": false,
   "license":   [

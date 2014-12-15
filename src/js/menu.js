@@ -24,7 +24,14 @@
 
 /*global angular */
 angular.module('JSVida-Menus', [
-]).directive('vidaMenu', [function () {
+]).directive('vidaOrganisms', [function () {
+    'use strict';
+
+    return {
+        template: ''
+    };
+
+}]).directive('vidaMenu', [function () {
     'use strict';
 
     return {
