@@ -130,6 +130,11 @@ angular.module('JSVida-3d-Render', [
         that.cameras.perspective = new three.PerspectiveCamera(75, renderer.x() / renderer.y(), 0.1, 1000);
     }
 
+    function resize() {
+        that.cameras.perspective.aspect = renderer.x() / renderer.y();
+        that.cameras.perspective.updateProjectionMatrix();
+    }
+
     function onUpdate() {
         // not sure what this is for?
         that.scene.simulate(undefined, 1);
@@ -145,6 +150,7 @@ angular.module('JSVida-3d-Render', [
         perspective: null
     };
     this.size = size;
+    this.resize = resize;
 
     size();
 
@@ -176,7 +182,6 @@ angular.module('JSVida-3d-Render', [
         y = y / shrinkFactor;
 
         renderer.size(+x, +y);
-        scene.size();
     }
 
     function linkVidaView(scope, elem) {
@@ -185,6 +190,8 @@ angular.module('JSVida-3d-Render', [
 
         // initialize the window/size
         size(elem);
+        // initializze the scene/size
+        scene.resize();
 
         // setup listeners
         elem.on('$destroy', destroy);
@@ -213,6 +220,8 @@ angular.module('JSVida-3d-Render', [
 
         function onWindowResize() {
             size(elem);
+            scene.resize();
+            controls.handleResize();
         }
 
         function destroy() {
