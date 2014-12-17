@@ -153,7 +153,7 @@ angular.module('JSVida-3d-Render', [
 
     var lastStyle,
         /** @const */
-        shrinkConstant = 25,
+        shrinkConstant = 0,
         /** @const */
         shrinkFactor = 1;
 
