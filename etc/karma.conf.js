@@ -26,6 +26,7 @@ module.exports = function (config) {
             'src/js/**/*.js',
 
             // mocks & specs
+            'spec/unit/mock-*.js',
             'spec/unit/*-spec.js'
         ]),
 

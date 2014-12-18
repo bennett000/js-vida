@@ -28,7 +28,11 @@ angular.module('JSVida-3d-Render', [
     'use strict';
 
     return new three.WebGLRenderer();
-}]).service('renderer', ['_renderer', function (_renderer) {
+}]).factory('animationFrame', ['$window', function ($window) {
+    'use strict';
+
+    return $window.requestAnimationFrame;
+}]).service('renderer', ['_renderer', 'animationFrame', function (_renderer, animationFrame) {
     'use strict';
 
     var renderer = _renderer,
@@ -97,19 +101,21 @@ angular.module('JSVida-3d-Render', [
      * @param scene {THREE.Scene}
      * @param camera {THREE.Camera}
      * @param onFrame {function(...)=}
+     * @returns {boolean}
      */
     function start(scene, camera, onFrame) {
         if (doStop) {
             doStop = false;
-            return;
+            return false;
         }
-        requestAnimationFrame(function reStart() { start(scene, camera, onFrame); });
+        animationFrame(function reStart() { start(scene, camera, onFrame); });
         scene.simulate();
         renderer.render(scene, camera);
 
         if (angular.isFunction(onFrame)) {
             onFrame();
         }
+        return true;
     }
 
     this.start = start;
