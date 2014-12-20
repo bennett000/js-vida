@@ -27,6 +27,8 @@ angular.module('JSVida-Menus', [
     'use strict';
 
     return {
+        restrict: 'E',
+        replace: true,
         template: ''
     };
 
