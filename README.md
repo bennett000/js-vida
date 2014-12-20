@@ -132,6 +132,19 @@ I'm not completely certain how to go about implementing good end to end testing
 for this system.  I would like to think it could be arranged with protractor.
 I would love ideas/suggestions for this.
 
+### Stress Testing
+
+Vida is going to allow the users to shape arbitrary universes, consequently
+the game _must_ be able to handle system limitations.  Profiling Vida on
+different systems is essential for determining how to better design for
+performance.
+
+Vida needs a test suite that:
+
+* Profiles performance on various systems
+* Measures memory consumption before/after construction/teardowns
+* Profiles our upstream dependencies on various systems
+
 ### Macro Composition
 
 Currently the project uses a hard coded angular module chain.  This is ugly, and

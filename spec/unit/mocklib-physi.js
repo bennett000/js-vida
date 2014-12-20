@@ -8,6 +8,12 @@ var Physijs = {
         if (!(this instanceof Scene)) {
             return new Scene();
         }
+
+        function add () {
+
+        }
+
+        this.add = add;
     },
     BoxMesh: function BoxMesh() {
         'use strict';
@@ -16,11 +22,17 @@ var Physijs = {
             return new BoxMesh();
         }
 
+        function addEventListener() {
+
+        }
+
         this.position = {
             x: 0,
             y: 0,
             z: 0
         };
+
+        this.addEventListener = addEventListener;
     },
     PerspectiveCamera: function PerspectiveCamera() {
         'use strict';

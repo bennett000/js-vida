@@ -10,6 +10,17 @@ var THREE = {
         if (!(this instanceof WebGLRenderer)) {
             return new WebGLRenderer();
         }
+
+        function setSize( ) {
+
+        }
+
+        function render() {
+
+        }
+
+        this.setSize = setSize;
+        this.render = render;
     },
     Scene: function Scene() {
         'use strict';
@@ -17,6 +28,12 @@ var THREE = {
         if (!(this instanceof Scene)) {
             return new Scene();
         }
+
+        function add () {
+
+        }
+
+        this.add = add;
     },
     BoxGeometry: function BoxGeometry() {
         'use strict';
@@ -38,5 +55,11 @@ var THREE = {
         if (!(this instanceof PerspectiveCamera)) {
             return new PerspectiveCamera();
         }
+
+        function updateProjectionMatrixx() {
+
+        }
+
+        this.updateProjectionMatrix = updateProjectionMatrix;
     }
 };
