@@ -114,7 +114,7 @@ var THREE = {
             return new WebGLRenderer();
         }
 
-        function setSize( ) {
+        function setSize() {
 
         }
 
@@ -132,7 +132,7 @@ var THREE = {
             return new Scene();
         }
 
-        function add () {
+        function add() {
 
         }
 
@@ -167,11 +167,11 @@ var THREE = {
 
         }
 
-        this.position =  {
+        this.position = {
             x: 0,
             y: 0,
             z: 0,
-            clone: function ( ){
+            clone: function () {
 
             },
             addVectors: function () {
@@ -185,5 +185,13 @@ var THREE = {
 
         this.updateProjectionMatrix = updateProjectionMatrix;
         this.lookAt = lookAt;
+    },
+    Mesh: function Mesh() {
+        'use strict';
+
+        if (!(this instanceof Mesh)) {
+            return new Mesh();
+        }
+
     }
 };
