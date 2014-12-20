@@ -171,7 +171,7 @@ angular.module('JSVida-Organism-Procomyte', [
      */
     function turn() {
         //scene.scene.simulate();
-        console.debug('population', species.length);
+        console.debug('population', population, 'species (including recent dead)', species.length);
         species.forEach(function (org) {
             // skip dead objects
             if (org.isAlive === false) {
@@ -272,6 +272,13 @@ angular.module('JSVida-Organism-Procomyte', [
 
     }
 
+    /**
+     * @returns {number}
+     */
+    function getPopulation() {
+        return population;
+    }
+
 
     function populate() {
         var i, x, z;
@@ -290,6 +297,7 @@ angular.module('JSVida-Organism-Procomyte', [
     makeProcomyte.species = species;
     makeProcomyte.turn = turn;
     makeProcomyte.limit = limitPop;
+    makeProcomyte.population = getPopulation;
 
     return makeProcomyte;
 }]);
