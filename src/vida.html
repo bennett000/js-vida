@@ -40,34 +40,36 @@
     <meta name="viewport"
           content="initial-scale=1.0, height=device-height, width=device-width, maximum-scale=1.0, user-scalable=0, minimal-ui,  maximum-scale=1.0"/>
     <!-- "app" icons -->
-    <link rel="shortcut icon" sizes="196x196" href="/img/H_logo_196x196.png">
+    <link rel="shortcut icon" sizes="196x196" href="/img/logo-196x196.png">
     <link rel="apple-touch-icon"
-          href="/img/H_logo_60x60.png">
+          href="/img/logo-60x60.png">
     <link rel="apple-touch-icon" sizes="76x76"
-          href="/img/logo_76x76.png">
+          href="/img/logo-76x76.png">
     <link rel="apple-touch-icon" sizes="120x120"
-          href="/img/logo_120x120.png">
+          href="/img/logo-120x120.png">
     <link rel="apple-touch-icon" sizes="152x152"
-          href="/img/logo_152x152.png">
+          href="/img/logo-152x152.png">
     <!-- loading "screens" -->
-    <link href="/img/logo_320x480.png"
+    <!-- currently these are a complete waste of space.  Crazy that an all black
+         *.png isn't magically smaller. -->
+    <link href="/img/logo-320x480.png"
           media="(device-width: 320px)" rel="apple-touch-startup-image">
-    <link href="/img/logo_640x960.png"
+    <link href="/img/logo-640x960.png"
           media="(device-width: 320px) and (-webkit-device-pixel-ratio: 2)"
           rel="apple-touch-startup-image">
-    <link href="/img/logo_768x1004.png"
+    <link href="/img/logo-768x1004.png"
           media="(device-width: 768px) and (orientation: portrait)"
           rel="apple-touch-startup-image">
     <!-- the 1024x768 might need to be 768x1024 ?? -->
-    <link href="/img/logo_1024x768.png"
+    <link href="/img/logo-1024x768.png"
           media="(device-width: 768px) and (orientation: landscape)"
           rel="apple-touch-startup-image">
     <!-- iPad (Retina) (Portrait) -->
-    <link href="/img/logo_1536x2008.png"
+    <link href="/img/logo-1536x2008.png"
           media="screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:portrait) and (-webkit-min-device-pixel-ratio: 2)"
           rel="apple-touch-startup-image"/>
     <!-- iPad (Retina) (Landscape) -->
-    <link href="/img/logo_2048x1496.png"
+    <link href="/img/logo-2048x1496.png"
           media="screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:landscape) and (-webkit-min-device-pixel-ratio: 2)"
           rel="apple-touch-startup-image"/>
 
@@ -75,18 +77,31 @@
         body, html {
             background-color: black;
             margin: 0;
+            font-family: helvetica, arial, sans;
+            overflow: hidden;
         }
+        /**###CSSBUILDLOCATION */
     </style>
+
+    <link rel="icon" href="favicon.ico" sizes="16x16" type="image/vnd.microsoft.icon" />
+    <!-- /* start-debug-block */ -->
     <link rel="stylesheet" href="css/vida.css"/>
+    <!-- /* end-debug-block */ -->
 </head>
 <body>
 <noscript>
+    <h1>JS Vida</h1>
+    <p>
     Sorry, but Vida is a client side application, and requires ECMAScript
     (JavaScript) to be enabled. Vida is FLOSS, so feel free to have a look.
+    </p>
 
+    <p>
     Vida - Conway inspired life game
     Copyright © 2014 Michael Bennett
+    </p>
 
+    <p>
     This file is part of Vida.
 
     Vida is free software: you can redistribute it and/or modify
@@ -102,22 +117,74 @@
     You should have received a copy of the GNU General Public License
     along with Vida. If not, see <a href="http://www.gnu.org/licenses/"
                                     title="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.
+    </p>
 </noscript>
+<div class="no-compat">
+    <h1>JS Vida</h1>
+    <p>
+    Sorry, but Vida is a client side application, and requires a modern web
+    browser that can support WebGL.
+
+    Here is a list of <em>cross platform</em> browsers that should be able to
+    run Vida
+    <ul>
+        <li>Mozilla's <a href="https://www.mozilla.org/en-US/firefox/new/" title="Firefox">Firefox</a></li>
+        <li>Google's  <a href="http://www.chromium.org/getting-involved/download-chromium" title="Chromium">Chromium</a> or <a href="http://www.google.com/chrome/" title="Google Chrome">Chrome</a> if you prefer compiled binaries</li>
+        <li><a href="http://www.opera.com/" title="Opera">Opera</a></li>
+    </ul>
+    </p>
+
+    <p>
+        Vida - Conway inspired life game
+        Copyright © 2014 Michael Bennett
+    </p>
+
+    <p>
+        This file is part of Vida.
+
+        Vida is free software: you can redistribute it and/or modify
+        it under the terms of the GNU General Public License as published by
+        the Free Software Foundation, either version 3 of the License, or
+        (at your option) any later version.
+
+        Vida is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+        GNU General Public License for more details.
+
+        You should have received a copy of the GNU General Public License
+        along with Vida. If not, see <a href="http://www.gnu.org/licenses/"
+                                        title="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.
+    </p>
+</div>
 
 <vida></vida>
 
-<!--<script src="/lib/threejs/build/three.js"></script>-->
-<script src="/lib/three.js/three.js"></script>
-<script src="/js/lib-track-control.js"></script>
-<script src="/lib/physijs/physi.js"></script>
-<script>Physijs.scripts.worker = '/lib/physijs/physijs_worker.js';
-Physijs.scripts.ammo = '/lib/ammo.js/builds/ammo.js'</script>
-<script src="/lib/underscore/underscore.js"></script>
-<script src="/lib/angular/angular.js"></script>
-<script src="/vida.js"></script>
-<script src="/js/menu.js"></script>
-<script src="/js/3d-objects.js"></script>
-<script src="/js/3d-render.js"></script>
-<script src="/js/org-procomyte.js"></script>
+<!-- Production -->
+<!--###BUILDSCRIPT-->
+<!-- END Production -->
+<!-- /* start-debug-block */ -->
+<script src="/manifest.js"></script>
+<script>
+    function buildJSSync(target, files) {
+        var el;
+        // do nothing if there are no files!
+        if (files.length < 1) { return; }
+
+        // create an element
+        el = window.document.createElement('script');
+
+        // add the next element _after_ this one loads
+        el.onload = function jsSyncNext() {
+            buildJSSync(target, files.slice(1));
+        };
+
+        // add the source file, and inject the script!
+        el.setAttribute('src', files[0]);
+        window.document.getElementsByTagName(target)[0].appendChild(el);
+    }
+    buildJSSync('body', [].concat(BOOTSTRAP.lib).concat(BOOTSTRAP.src));
+</script>
+<!-- /* end-debug-block */ -->
 </body>
 </html>

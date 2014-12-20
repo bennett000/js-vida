@@ -2,7 +2,6 @@
  * file: menu.js
  * Created by michael on 07/12/14.
  *
- @license
  Vida - Conway inspired life game
  Copyright © 2014 Michael Bennett
 
@@ -24,7 +23,16 @@
 
 /*global angular */
 angular.module('JSVida-Menus', [
-]).directive('vidaMenu', [function () {
+]).directive('vidaOrganisms', [function () {
+    'use strict';
+
+    return {
+        restrict: 'E',
+        replace: true,
+        template: ''
+    };
+
+}]).directive('vidaMenu', [function () {
     'use strict';
 
     return {

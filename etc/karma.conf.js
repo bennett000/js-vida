@@ -1,6 +1,7 @@
 // Karma configuration
 // Generated on Tue Feb 04 2014 21:57:25 GMT-0500 (EST)
 
+/*global module */
 module.exports = function (config) {
     'use strict';
 
@@ -14,10 +15,12 @@ module.exports = function (config) {
         frameworks: ['jasmine'],
 
         files: [
-            // libraries
-            'src/lib/three.js/three.js',
+            // lib
             'src/lib/underscore/underscore.js',
             'src/lib/angular/angular.js',
+
+            // lib mocks
+            'spec/unit/mocklib-*.js',
             'src/lib/angular-mocks/angular-mocks.js',
 
             // source
@@ -25,7 +28,8 @@ module.exports = function (config) {
             'src/js/**/*.js',
 
             // mocks & specs
-            'spec/*-spec.js'
+            'spec/unit/mock-*.js',
+            'spec/unit/*-spec.js'
         ],
 
         // list of files to exclude

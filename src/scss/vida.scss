@@ -28,6 +28,18 @@ canvas {
   width: 100%;
   height: 100%;
 }
+
+noscript {
+  color: #EEFFCC;
+  width: 30em;
+}
+
+.no-compat {
+  width: 30em;
+  display: none;
+  visibility: hidden;
+}
+
 .vida-main {
   width: 100%;
   height: 100%;

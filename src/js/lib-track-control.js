@@ -1,10 +1,16 @@
 /**
+ *  This file is a *dependency* of Vida, and is *not* part of the actual source
+ *
+ *  This file has no known repository, which is why it is here, and not in lib
+ */
+/**
  * @author Eberhard Graether / http://egraether.com/
  * @author Mark Lundin 	/ http://mark-lundin.com
  */
 
-THREE.TrackballControls = function ( object, domElement ) {
+/** @todo update this to spec */
 
+THREE.TrackballControls = function ( object, domElement ) {
     var _this = this;
     var STATE = { NONE: -1, ROTATE: 0, ZOOM: 1, PAN: 2, TOUCH_ROTATE: 3, TOUCH_ZOOM_PAN: 4 };
 
@@ -92,16 +98,6 @@ THREE.TrackballControls = function ( object, domElement ) {
             this.screen.top = box.top + window.pageYOffset - d.clientTop;
             this.screen.width = box.width;
             this.screen.height = box.height;
-
-        }
-
-    };
-
-    this.handleEvent = function ( event ) {
-
-        if ( typeof this[ event.type ] == 'function' ) {
-
-            this[ event.type ]( event );
 
         }
 

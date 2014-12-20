@@ -1,6 +1,7 @@
+/*global __dirname, require, console */
 var connect = require('connect'),
 port = 8080,
-path = __dirname +'/../src/';
+path = __dirname +'/../release/';
 
 connect(
     connect['static'](path)

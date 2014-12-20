@@ -2,7 +2,6 @@
  * file: 3d-render
  * Created by michael on 14/12/14.
  *
- @license
  Vida - Conway inspired life game
  Copyright © 2014 Michael Bennett
 
@@ -29,7 +28,11 @@ angular.module('JSVida-3d-Render', [
     'use strict';
 
     return new three.WebGLRenderer();
-}]).service('renderer', ['_renderer', function (_renderer) {
+}]).factory('animationFrame', ['$window', function ($window) {
+    'use strict';
+
+    return $window.requestAnimationFrame;
+}]).service('renderer', ['_renderer', 'animationFrame', function (_renderer, animationFrame) {
     'use strict';
 
     var renderer = _renderer,
@@ -98,19 +101,21 @@ angular.module('JSVida-3d-Render', [
      * @param scene {THREE.Scene}
      * @param camera {THREE.Camera}
      * @param onFrame {function(...)=}
+     * @returns {boolean}
      */
     function start(scene, camera, onFrame) {
         if (doStop) {
             doStop = false;
-            return;
+            return false;
         }
-        requestAnimationFrame(function reStart() { start(scene, camera, onFrame); });
+        animationFrame(function reStart() { start(scene, camera, onFrame); });
         scene.simulate();
         renderer.render(scene, camera);
 
         if (angular.isFunction(onFrame)) {
             onFrame();
         }
+        return true;
     }
 
     this.start = start;
@@ -128,7 +133,15 @@ angular.module('JSVida-3d-Render', [
     var that = this;
 
     function size() {
-        that.cameras.perspective = new three.PerspectiveCamera(75, renderer.x() / renderer.y(), 0.1, 1000);
+        that.cameras.persective = new three.PerspectiveCamera(75, renderer.x() / renderer.y(), 0.1, 1000);
+    }
+
+    function resize() {
+        if (!that.cameras.perspective) {
+            size();
+        }
+        that.cameras.perspective.aspect = renderer.x() / renderer.y();
+        that.cameras.perspective.updateProjectionMatrix();
     }
 
     function onUpdate() {
@@ -146,6 +159,7 @@ angular.module('JSVida-3d-Render', [
         perspective: null
     };
     this.size = size;
+    this.resize = resize;
 
     size();
 
@@ -154,7 +168,7 @@ angular.module('JSVida-3d-Render', [
 
     var lastStyle,
         /** @const */
-        shrinkConstant = 25,
+        shrinkConstant = 0,
         /** @const */
         shrinkFactor = 1;
 
@@ -177,7 +191,6 @@ angular.module('JSVida-3d-Render', [
         y = y / shrinkFactor;
 
         renderer.size(+x, +y);
-        scene.size();
     }
 
     function linkVidaView(scope, elem) {
@@ -186,6 +199,8 @@ angular.module('JSVida-3d-Render', [
 
         // initialize the window/size
         size(elem);
+        // initializze the scene/size
+        scene.resize();
 
         // setup listeners
         elem.on('$destroy', destroy);
@@ -214,6 +229,8 @@ angular.module('JSVida-3d-Render', [
 
         function onWindowResize() {
             size(elem);
+            scene.resize();
+            controls.handleResize();
         }
 
         function destroy() {

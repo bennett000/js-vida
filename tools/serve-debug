@@ -1,7 +1,8 @@
 #!/bin/bash
+
+# where are we?
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 cd ..
 
-grunt test
-
+node ./tools/static-http-server-debug.js
