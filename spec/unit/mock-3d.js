@@ -9,5 +9,17 @@ var mock3d = {
     },
     camera: {
 
+    },
+    cameras: {
+        perspective: {
+            position: {
+                x: 0,
+                y: 0,
+                z: 0
+            },
+            up: {
+                clone: function () {}
+            }
+        }
     }
 };

@@ -133,7 +133,7 @@ angular.module('JSVida-3d-Render', [
     var that = this;
 
     function size() {
-        that.cameras.perspective = new three.PerspectiveCamera(75, renderer.x() / renderer.y(), 0.1, 1000);
+        that.cameras.persective = new three.PerspectiveCamera(75, renderer.x() / renderer.y(), 0.1, 1000);
     }
 
     function resize() {

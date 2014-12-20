@@ -73,6 +73,45 @@ service.
 skip the _mandatory_ testing
 * `grunt --help` for all options
 
+
+## Contributing
+
+Currently I have pretty specific plans for what I want to do with this.  I am
+going to try and spell out those things in the `TODO.md` file.  If you plan on
+implementing anything comparable to what's in the `TODO.md` you should message
+me so we can coordinate.
+
+If you want to implement anything not in the `TODO.md` file, naturally go ahead,
+this is FLOSS.  If I really like it, I will pull it in.  That being said, if
+people want me to pull code they're going to have to put up with my love of
+semi-colons, and other peculiarities that are in the style guide.
+
+## Style Guide
+
+This is still very much in progress.
+
+### Formatting
+
+Formatting is strict, but not militant.  The 'spec' is currently stored in the
+form of WebStorm settings that are included in the source.  These settings
+_loosely_ follow two of Google's style guides, fused with sprinklings of
+Crockford.
+
+* Google's [Angular For Closure Users](http://google-styleguide.googlecode.com/svn/trunk/angularjs-google-style.html)
+* Google's [JavaScript Style Guide](http://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml)
+* [Crockford](http://javascript.crockford.com/code.html)
+
+### Macro Composition
+
+Currently the project uses a hard coded angular module chain.  This is ugly, and
+inefficient.  Currently a flatter structure that uses Google's closure tools is
+being explored.
+
+### Micro Composition
+
+* Functions should prefer one, or zero arguments
+* Functions should use at most five arguments
+
 ## License
 
     Vida - Conway inspired life game

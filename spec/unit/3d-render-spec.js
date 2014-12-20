@@ -131,3 +131,27 @@ describe('Scene Service', function () {
         module('JSVida-3d-Render');
     });
 });
+
+describe('vidaCamera0', function () {
+    'use strict';
+    var el, scope
+
+    beforeEach(function () {
+        module('JSVida-3d-Render');
+    });
+
+    beforeEach(inject(function ($rootScope, $compile, scene, renderer) {
+        spyOn(renderer, 'start');
+        scene.cameras = mock3d.cameras;
+        scope = $rootScope.$new();
+
+        el = '<vida-camera-0></vida-camera-0>';
+
+        el = $compile(el)(scope);
+        scope.$digest();
+    }));
+
+    it('should start the renderer', inject(function (renderer) {
+        expect(renderer.start).toHaveBeenCalled();
+    }));
+});
