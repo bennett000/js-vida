@@ -101,6 +101,37 @@ Crockford.
 * Google's [JavaScript Style Guide](http://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml)
 * [Crockford](http://javascript.crockford.com/code.html)
 
+
+### Annotations & Commentary
+
+* Every function block _must_ have a JSDoc style annotation
+* Types must be annotation as accurately as possible
+* Keep annotation/commentary terse
+* Try and make the code clearly speak for itself
+* There will be a `/doc` folder in the root of this project for more elaborate
+documentation.  Please reference paths to relevant documents in inline
+commentary.
+
+### Unit Testing
+
+* Mandatory for pull requests
+* Must exceed eighty percent (80%) line coverage
+* Uses Jasmine
+* Can use a karma server `/etc/karma.conf.js`
+* Specs should _strongly_ favour human readability
+* it blocks should be as programmaticly terse as possible, try for five lines or
+less
+* Data/Functions should be factored out of spec files, and into data-* files, or
+helper-* files
+* Favour behaviour driven development practices (even though the git history
+proves that I'm not religious)
+
+### e2e Testing
+
+I'm not completely certain how to go about implementing good end to end testing
+for this system.  I would like to think it could be arranged with protractor.
+I would love ideas/suggestions for this.
+
 ### Macro Composition
 
 Currently the project uses a hard coded angular module chain.  This is ugly, and
