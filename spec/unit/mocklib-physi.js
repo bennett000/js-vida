@@ -10,7 +10,7 @@ var Physijs = {
             return new Scene();
         }
 
-        return new THREE.Scene();
+       THREE.Scene.call(this);
     },
     BoxMesh: function BoxMesh() {
         'use strict';
@@ -37,3 +37,7 @@ var Physijs = {
         return p1;
     }
 };
+
+
+Physijs.Scene.prototype = new THREE.Scene();
+Physijs.Scene.prototype.constructor = Physijs.Scene;

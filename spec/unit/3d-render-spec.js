@@ -130,6 +130,10 @@ describe('Scene Service', function () {
     beforeEach(function () {
         module('JSVida-3d-Render');
     });
+
+    it('should provide a Physijs scene object', inject(function (scene) {
+        expect(scene.scene instanceof Physijs.Scene).toBe(true);
+    }));
 });
 
 describe('vidaCamera0', function () {
