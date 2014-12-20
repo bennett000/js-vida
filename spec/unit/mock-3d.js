@@ -1,3 +1,4 @@
+/*global THREE, Physi*/
 var mock3d = {
     animationFrame: function mockAnimationFrame() {
         'use strict';
@@ -7,19 +8,7 @@ var mock3d = {
     scene: {
         simulate: function () {}
     },
-    camera: {
-
-    },
     cameras: {
-        perspective: {
-            position: {
-                x: 0,
-                y: 0,
-                z: 0
-            },
-            up: {
-                clone: function () {}
-            }
-        }
+        perspective: new THREE.PerspectiveCamera()
     }
 };

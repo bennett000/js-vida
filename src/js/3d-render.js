@@ -137,6 +137,9 @@ angular.module('JSVida-3d-Render', [
     }
 
     function resize() {
+        if (!that.cameras.perspective) {
+            size();
+        }
         that.cameras.perspective.aspect = renderer.x() / renderer.y();
         that.cameras.perspective.updateProjectionMatrix();
     }

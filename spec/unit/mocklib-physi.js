@@ -1,3 +1,4 @@
+/*global THREE */
 var Physijs = {
     scripts: {
 
@@ -9,11 +10,7 @@ var Physijs = {
             return new Scene();
         }
 
-        function add () {
-
-        }
-
-        this.add = add;
+        return new THREE.Scene();
     },
     BoxMesh: function BoxMesh() {
         'use strict';
@@ -33,13 +30,6 @@ var Physijs = {
         };
 
         this.addEventListener = addEventListener;
-    },
-    PerspectiveCamera: function PerspectiveCamera() {
-        'use strict';
-
-        if (!(this instanceof PerspectiveCamera)) {
-            return new PerspectiveCamera();
-        }
     },
     createMaterial: function (p1) {
         'use strict';
