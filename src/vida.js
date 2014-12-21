@@ -308,37 +308,44 @@ angular.module('JSVida', [
 
     /**
      * @param seed {Array.<number>}
+     * @param result {Array.<number>}
      * @param x {number}
      * @param y {number}
      */
-    function tick(seed, x, y) {
+    function tick(seed, result, x, y) {
         /** @type {number} */
         var neighbours;
 
-        return seed.map(function (cell, offset) {
+        seed.forEach(function (cell, offset) {
             neighbours = liveNeighbours(seed, offset, x, y);
             // alive cases
             if (cell === 1) {
                 // under pop case
                 if (neighbours < popMin) {
+                    result[offset] = 0;
                     return 0;
                 }
                 // even pop case
                 if (neighbours <= popMax) {
+                    result[offset] = 1;
                     return 1;
                 }
                 // over pop case
+                result[offset] = 0;
                 return 0;
             }
             // dead cases
 
             // birth case
             if (neighbours === 3) {
+                result[offset] = 1;
                 return 1;
             }
             // dead is dead case
+            result[offset] = 0;
             return 0;
         });
+
     }
 
     function Conway(x, y, seed) {
@@ -346,19 +353,33 @@ angular.module('JSVida', [
             return new Conway(x, y, seed);
         }
         var that = makeListener(this),
+            /** @type {Array.<number>} */
+            buffer = [],
+            /** @type {boolean} */
             doStop = false,
+            /** @type {boolean} */
+            didFlip = false,
+            /** @type {boolean} */
             isRunning = false;
 
-        seed = completeSeed(seed, x, y);
+        completeSeed(seed, x, y);
 
         function onTick() {
             if (doStop) {
                 doStop = false;
                 isRunning = false;
+                didFlip = false;
                 return;
             }
-            seed = tick(seed, x, y);
-            that.triggerSync('tick', seed);
+            if (didFlip) {
+                tick(buffer, seed, x, y);
+                that.triggerSync('tick', seed);
+                didFlip = false;
+            } else {
+                tick(seed, buffer, x, y);
+                that.triggerSync('tick', buffer);
+                didFlip = true;
+            }
             $timeout(onTick, tickInterval);
         }
 
