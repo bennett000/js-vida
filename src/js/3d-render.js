@@ -39,9 +39,9 @@ angular.module('JSVida-3d-Render', [
         /** @type {boolean} */
         doStop = false,
         /** @type number */
-        x = 0,
+        x = 640,
         /** @type number */
-        y = 0;
+        y = 480;
 
     /**
      * @param newX {number=}
@@ -133,7 +133,7 @@ angular.module('JSVida-3d-Render', [
     var that = this;
 
     function size() {
-        that.cameras.persective = new three.PerspectiveCamera(75, renderer.x() / renderer.y(), 0.1, 1000);
+        that.cameras.perspective = new three.PerspectiveCamera(75, renderer.x() / renderer.y(), 0.1, 1000);
     }
 
     function resize() {

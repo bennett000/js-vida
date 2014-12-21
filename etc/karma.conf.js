@@ -20,7 +20,8 @@ module.exports = function (config) {
             'src/lib/angular/angular.js',
 
             // lib mocks
-            'spec/unit/mocklib-*.js',
+            'spec/unit/mocklib-three.js',
+            'spec/unit/mocklib-physi.js',
             'src/lib/angular-mocks/angular-mocks.js',
 
             // source
