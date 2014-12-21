@@ -37,23 +37,52 @@ angular.module('JSVida-3d-Objects', [
 
     return getCube;
 
-}]).factory('physicsCube', ['three', 'physi', function (three, physi) {
+}]).factory('simpleSphere', ['three', function (three) {
     'use strict';
 
-    function getCube(callbacks) {
-        callbacks = callbacks || {};
+    function getSphere() {
+        var geometry = new three.SphereGeometry(0.5, 64, 64),
+            material = new three.MeshPhongMaterial();
 
-        var geometry = new three.BoxGeometry(1.5, 0.5, 1.5),
-            material = physi.createMaterial(new three.MeshBasicMaterial({color: 0x00ff00}), 0.5),
-            box = new physi.BoxMesh(geometry, material, 1);
-
-        if (angular.isFunction(callbacks.collision)) {
-            box.addEventListener('collision', callbacks.collision);
-        }
-
-        return box;
+        return new three.Mesh(geometry, material);
     }
 
-    return getCube;
+    return getSphere;
+}]).factory('textureSphere', ['three', 'between', function (three, between) {
+    'use strict';
 
-}]);
+    function getSphere(params) {
+        params = params || {};
+        if (typeof params !== 'object') {
+            params = {};
+        }
+
+        params.geometry = new three.SphereGeometry(0.5, 64, 64);
+        params.material = new three.MeshBasicMaterial(params);
+
+
+        return new three.Mesh(params.geometry, params.material);
+    }
+
+    return getSphere;
+}]).
+factory('physicsCube', ['three', 'physi', function (three, physi) {
+            'use strict';
+
+            function getCube(callbacks) {
+                callbacks = callbacks || {};
+
+                var geometry = new three.BoxGeometry(1.5, 0.5, 1.5),
+                    material = physi.createMaterial(new three.MeshBasicMaterial({color: 0x00ff00}), 0.5),
+                    box = new physi.BoxMesh(geometry, material, 1);
+
+                if (angular.isFunction(callbacks.collision)) {
+                    box.addEventListener('collision', callbacks.collision);
+                }
+
+                return box;
+            }
+
+            return getCube;
+
+        }]);

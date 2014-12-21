@@ -18,7 +18,7 @@
  along with Vida.  If not, see <http://www.gnu.org/licenses/>.
  */
 /*global describe, it, spyOn, expect, window, angular, module, inject, beforeEach */
-/*global mock3d */
+/*global mock3d, Physijs */
 describe('Animation Frame Service', function () {
     'use strict';
 
@@ -138,7 +138,7 @@ describe('Scene Service', function () {
 
 describe('vidaCamera0', function () {
     'use strict';
-    var el, scope
+    var el, scope;
 
     beforeEach(function () {
         module('JSVida-3d-Render');
