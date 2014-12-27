@@ -145,6 +145,14 @@ var THREE = {
             return new BoxGeometry();
         }
     },
+    SphereGeometry: function SphereGeometry() {
+        'use strict';
+
+        if (!(this instanceof SphereGeometry)) {
+            return new SphereGeometry();
+        }
+
+    },
     MeshBasicMaterial: function MeshBasicMaterial() {
         'use strict';
 
@@ -193,5 +201,10 @@ var THREE = {
             return new Mesh();
         }
 
+        this.position = {
+            x: 0,
+            y: 0,
+            z: 0
+        };
     }
 };
