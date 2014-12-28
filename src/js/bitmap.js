@@ -75,12 +75,19 @@ angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
         /*jshint validthis:true */
         x = +x;
         y = +y;
-        if (x * y * this.config.offset > this.map.length) {
-            return -1;
+        if (x < 0) {
+            x = this.config.x - Math.abs(x);
         }
-        if ((x < 0) || (y < 0)) {
-            return -2;
+        if (y < 0) {
+            y = this.config.y - Math.abs(y);
         }
+        if (x >= this.config.x) {
+            x = x - this.config.x;
+        }
+        if (y >= this.config.y) {
+            y = y - this.config.y;
+        }
+
         return x + this.config.x * y;
     }
 
@@ -238,5 +245,4 @@ angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
     }
 
     return Bitmap;
-}])
-;
+}]);

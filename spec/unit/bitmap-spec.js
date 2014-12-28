@@ -81,22 +81,28 @@ describe('Bitmap Class', function () {
            expect(b.get1d(0, 5)).toBe(50);
        }));
 
-    it('get1d method should reject x < 0',
+    it('get1d method should wrap x < 0',
        inject(function (Bitmap) {
            var b = new Bitmap(validConfig);
-           expect(b.get1d(-1, 5)).toBe(-2);
+           expect(b.get1d(-1, 5)).toBe(59);
        }));
 
-    it('get1d method should reject y < 0',
+    it('get1d method should wrap y < 0',
        inject(function (Bitmap) {
            var b = new Bitmap(validConfig);
-           expect(b.get1d(5, -2)).toBe(-2);
+           expect(b.get1d(5, -2)).toBe(85);
        }));
 
-    it('get1d method should reject beyond limits > this.map.length',
+    it('get1d method should wrap beyond limits  x > this.config.x',
        inject(function (Bitmap) {
            var b = new Bitmap(validConfig);
-           expect(b.get1d(11, 10)).toBe(-1);
+           expect(b.get1d(11, 5)).toBe(51);
+       }));
+
+    it('get1d method should wrap beyond limits  y > this.config.y',
+       inject(function (Bitmap) {
+           var b = new Bitmap(validConfig);
+           expect(b.get1d(5, 10)).toBe(5);
        }));
 
     it('get1d method should convert x/y to linear offset, (5, 5)->55',
