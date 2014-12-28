@@ -122,4 +122,59 @@ describe('Bitmap Class', function () {
         expect(b.map[366]).toBe(102);
         expect(b.map[367]).toBe(103);
     }));
+
+    it('setPixel should clamp colours between 0/255', inject(function (Bitmap) {
+        var b = new Bitmap(validConfig);
+        b.setPixel(1, 9, -100, 301, NaN, 103);
+        expect(b.getPixelR(1, 9)).toBe(0);
+        expect(b.getPixelG(1, 9)).toBe(255);
+        expect(b.getPixelB(1, 9)).toBe(0);
+    }));
+
+    it('getPixel should return the colour at (0, 0)', inject(function (Bitmap) {
+        var b = new Bitmap(validConfig),
+            c = b.getPixel(0, 0);
+        expect(c.r).toBe(255);
+        expect(c.g).toBe(255);
+        expect(c.b).toBe(255);
+        expect(c.a).toBe(255);
+    }));
+
+    it('getPixel should return the colour at (0, 0) (RGB)',
+       inject(function (Bitmap) {
+           var b = new Bitmap({x: 2, y: 2, format: 'RGB'}),
+               c = b.getPixel(0, 0);
+           expect(c.r).toBe(255);
+           expect(c.g).toBe(255);
+           expect(c.b).toBe(255);
+           expect(c.a).toBeUndefined();
+       }));
+
+    it('getPixelR should return the red component off the colour at (0, 0)',
+       inject(function (Bitmap) {
+           var b = new Bitmap(validConfig);
+           b.setPixel(0, 0, 5, 6, 7, 8);
+           expect(b.getPixelR(0, 0)).toBe(5);
+       }));
+
+    it('getPixelG should return the red component off the colour at (0, 0)',
+       inject(function (Bitmap) {
+           var b = new Bitmap(validConfig);
+           b.setPixel(0, 0, 5, 6, 7, 8);
+           expect(b.getPixelG(0, 0)).toBe(6);
+       }));
+
+    it('getPixelB should return the red component off the colour at (0, 0)',
+       inject(function (Bitmap) {
+           var b = new Bitmap(validConfig);
+           b.setPixel(0, 0, 5, 6, 7, 8);
+           expect(b.getPixelB(0, 0)).toBe(7);
+       }));
+
+    it('getPixelA should return the red component off the colour at (0, 0)',
+       inject(function (Bitmap) {
+           var b = new Bitmap(validConfig);
+           b.setPixel(0, 0, 5, 6, 7, 8);
+           expect(b.getPixelA(0, 0)).toBe(8);
+       }));
 });

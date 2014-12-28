@@ -60,7 +60,8 @@ angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
             offset: offset,
             x: config.x,
             y: config.y,
-            format: config.format
+            format: config.format,
+            fill: config.fill || defaultColour
         };
     }
 
@@ -130,25 +131,96 @@ angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
         /*jshint validthis:true */
         var offset = get1d.call(this, x, y) * this.config.offset,
             that = this;
-        if (this.format === RGBA) {
-            return {
-                r: that.map[offset],
-                g: that.map[offset + 1],
-                b: that.map[offset + 2]
-            };
-        }  else {
+        if (this.config.format === RGBA) {
             return {
                 r: that.map[offset],
                 g: that.map[offset + 1],
                 b: that.map[offset + 2],
                 a: that.map[offset + 3]
             };
+        }  else {
+            return {
+                r: that.map[offset],
+                g: that.map[offset + 1],
+                b: that.map[offset + 2]
+            };
+        }
+    }
+
+    /**
+     * Get the r component of the pixel at x/y
+     * @param x {number}
+     * @param y {number}
+     * @returns {number}
+     */
+    function getPixelR(x, y) {
+        /*jshint validthis:true */
+        var offset = get1d.call(this, x, y) * this.config.offset;
+        return this.map[offset];
+    }
+
+    /**
+     * Get the g component of the pixel at x/y
+     * @param x {number}
+     * @param y {number}
+     * @returns {number}
+     */
+    function getPixelG(x, y) {
+        /*jshint validthis:true */
+        var offset = get1d.call(this, x, y) * this.config.offset;
+        return this.map[offset + 1];
+    }
+
+    /**
+     * Get the b component of the pixel at x/y
+     * @param x {number}
+     * @param y {number}
+     * @returns {number}
+     */
+    function getPixelB(x, y) {
+        /*jshint validthis:true */
+        var offset = get1d.call(this, x, y) * this.config.offset;
+        return this.map[offset + 2];
+    }
+
+    /**
+     * Get the a component of the pixel at x/y
+     * @param x {number}
+     * @param y {number}
+     * @returns {number}
+     */
+    function getPixelA(x, y) {
+        /*jshint validthis:true */
+        var offset = get1d.call(this, x, y) * this.config.offset;
+        return this.map[offset + 3];
+    }
+
+    /**
+     * fills the bitmap with the given colour, or this.config.fill
+     * @param colour {{ r: {number}, g: {number}, b: {number}, a: {number}= }}
+     */
+    function fill(colour) {
+        /*jshint validthis:true */
+        if (!colour) { colour = this.config.fill; }
+        var i;
+        for (i = 0; i < this.map.length; i += this.offset) {
+            this.map[i] = colour.r;
+            this.map[i + 1] = colour.g;
+            this.map[i + 2] = colour.b;
+            if (this.config.format === RGBA) {
+                this.map[i + 3] = colour.a;
+            }
         }
     }
 
     Bitmap.prototype.setPixel = setPixel;
     Bitmap.prototype.getPixel = getPixel;
+    Bitmap.prototype.getPixelR = getPixelR;
+    Bitmap.prototype.getPixelG = getPixelG;
+    Bitmap.prototype.getPixelB = getPixelB;
+    Bitmap.prototype.getPixelA = getPixelA;
     Bitmap.prototype.get1d = get1d;
+    Bitmap.prototype.fill = fill;
 
     /**
      * @param config {{ x: {number}, y: {number}, format: 'RGB'|'RGBA', data: Array.<number> }}
@@ -162,6 +234,7 @@ angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
 
         this.config = validate(config);
         this.map = new Uint8Array(this.config.x * this.config.y * this.config.offset);
+        this.fill();
     }
 
     return Bitmap;
