@@ -37,6 +37,28 @@ describe('Vida 3D Objects', function () {
         }));
     });
 
+    describe('Simple Sphere', function () {
+        it('should be a function', inject(function (simpleSphere) {
+            expect(typeof simpleSphere).toBe('function');
+        }));
+
+        it('should return a new three.Mesh object',
+           inject(function (simpleSphere) {
+               expect(simpleSphere() instanceof THREE.Mesh).toBe(true);
+           }));
+    });
+
+    describe('Texture Sphere', function () {
+        it('should be a function', inject(function (textureSphere) {
+            expect(typeof textureSphere).toBe('function');
+        }));
+
+        it('should return a new three.Mesh object',
+           inject(function (textureSphere) {
+               expect(textureSphere() instanceof THREE.Mesh).toBe(true);
+           }));
+    });
+
     describe('Physics Cube', function () {
         it('should be a function', inject(function (physicsCube) {
             expect(typeof physicsCube).toBe('function');

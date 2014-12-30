@@ -206,5 +206,16 @@ var THREE = {
             y: 0,
             z: 0
         };
+    },
+    MeshPhongMaterial: function Mesh() {
+        'use strict';
+
+        if (!(this instanceof Mesh)) {
+            return new Mesh();
+        }
+        THREE.Mesh.call(this);
     }
 };
+
+THREE.MeshPhongMaterial.prototype = new THREE.Mesh();
+THREE.MeshPhongMaterial.constructor = THREE.MeshPhongMaterial;

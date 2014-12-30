@@ -12,7 +12,10 @@ var BOOTSTRAP = Object.freeze({
     '/js/menu.js',
     '/js/3d-objects.js',
     '/js/3d-render.js',
-    '/js/org-procomyte.js'
+    '/js/bitmap.js',
+    '/js/org-procomyte.js',
+    '/js/conway.js',
+    '/js/2d-map.js'
   ]
 });
 

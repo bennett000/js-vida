@@ -21,7 +21,9 @@
  along with Vida.  If not, see <http://www.gnu.org/licenses/>.
  */
 /*global angular*/
-angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
+angular.module('JSVida-Bitmap', [
+    'JSVida-Map2D'
+]).factory('Bitmap', ['xyToOffset', function (xyToOffset) {
     'use strict';
     /** @const */
     var RGB = 'RGB',
@@ -66,32 +68,6 @@ angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
     }
 
     /**
-     * Convert an x/y into a number on a one dimensional line
-     * @param x {number}
-     * @param y {number}
-     * @returns {number}
-     */
-    function get1d(x, y) {
-        /*jshint validthis:true */
-        x = +x;
-        y = +y;
-        if (x < 0) {
-            x = this.config.x - Math.abs(x);
-        }
-        if (y < 0) {
-            y = this.config.y - Math.abs(y);
-        }
-        if (x >= this.config.x) {
-            x = x - this.config.x;
-        }
-        if (y >= this.config.y) {
-            y = y - this.config.y;
-        }
-
-        return x + this.config.x * y;
-    }
-
-    /**
      * @param colour {*}
      * @returns {number}
      */
@@ -109,17 +85,27 @@ angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
     }
 
     /**
-     * @param x {number}
-     * @param y {number}
+     * @param offset {number}
+     * @returns {boolean}
+     */
+    function validateOffset(offset) {
+        /*jshint validthis:true */
+        return (+offset >= 0) && (+offset < this.map.length);
+    }
+
+    /**
+     * @param offset {number}
      * @param r {number}
      * @param g {number}
      * @param b {number}
      * @param a {number}
      */
-    function setPixel(x, y, r, g, b, a) {
+    function setPixelOffset(offset, r, g, b, a) {
         /*jshint validthis:true */
-        var offset = get1d.call(this, x, y) * this.config.offset;
-
+        if (!validateOffset.call(this, offset)) {
+            return;
+        }
+        offset = +offset * this.config.offset;
         this.map[offset] = validateColour(r);
         this.map[offset + 1] = validateColour(g);
         this.map[offset + 2] = validateColour(b);
@@ -131,13 +117,30 @@ angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
     /**
      * @param x {number}
      * @param y {number}
-     * @returns {{ r: {number}, g: {number}, b: {number}}} |
-     * {{ r: {number}, g: {number}, b: {number}, a: {number} }}
+     * @param r {number}
+     * @param g {number}
+     * @param b {number}
+     * @param a {number}
      */
-    function getPixel(x, y) {
+    function setPixel(x, y, r, g, b, a) {
         /*jshint validthis:true */
-        var offset = get1d.call(this, x, y) * this.config.offset,
-            that = this;
+        var offset = xyToOffset.call(this, x, y);
+
+        setPixelOffset.call(this, offset, r, g, b, a);
+    }
+
+    /**
+     * @param offset {number}
+     * @returns {{ r: {number}, g: {number}, b: {number}, a: {number}= }}|null
+     */
+    function getPixelOffset(offset) {
+        /*jshint validthis:true */
+        if (!validateOffset.call(this, offset)) {
+            return null;
+        }
+        offset = +offset;
+        var that = this;
+
         if (this.config.format === RGBA) {
             return {
                 r: that.map[offset],
@@ -155,6 +158,32 @@ angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
     }
 
     /**
+     * @param x {number}
+     * @param y {number}
+     * @returns {{ r: {number}, g: {number}, b: {number}}} |
+     * {{ r: {number}, g: {number}, b: {number}, a: {number} }}
+     */
+    function getPixel(x, y) {
+        /*jshint validthis:true */
+        var offset = xyToOffset.call(this, x, y) * this.config.offset;
+        return getPixelOffset.call(this, offset);
+    }
+
+    /**
+     * @param offset {number}
+     * @returns {number}
+     */
+    function getOffset(offset) {
+        /*jshint validthis:true */
+        if (!validateOffset.call(this, offset)) {
+            return null;
+        }
+        offset = +offset;
+
+        return this.map[offset];
+    }
+
+    /**
      * Get the r component of the pixel at x/y
      * @param x {number}
      * @param y {number}
@@ -162,8 +191,8 @@ angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
      */
     function getPixelR(x, y) {
         /*jshint validthis:true */
-        var offset = get1d.call(this, x, y) * this.config.offset;
-        return this.map[offset];
+        var offset = xyToOffset.call(this, x, y) * this.config.offset;
+        return this.getOffset.call(this, offset);
     }
 
     /**
@@ -174,8 +203,8 @@ angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
      */
     function getPixelG(x, y) {
         /*jshint validthis:true */
-        var offset = get1d.call(this, x, y) * this.config.offset;
-        return this.map[offset + 1];
+        var offset = xyToOffset.call(this, x, y) * this.config.offset;
+        return this.getOffset.call(this, offset + 1);
     }
 
     /**
@@ -186,8 +215,8 @@ angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
      */
     function getPixelB(x, y) {
         /*jshint validthis:true */
-        var offset = get1d.call(this, x, y) * this.config.offset;
-        return this.map[offset + 2];
+        var offset = xyToOffset.call(this, x, y) * this.config.offset;
+        return this.getOffset.call(this, offset + 2);
     }
 
     /**
@@ -198,8 +227,8 @@ angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
      */
     function getPixelA(x, y) {
         /*jshint validthis:true */
-        var offset = get1d.call(this, x, y) * this.config.offset;
-        return this.map[offset + 3];
+        var offset = xyToOffset.call(this, x, y) * this.config.offset;
+        return this.getOffset.call(this, offset + 3);
     }
 
     /**
@@ -210,7 +239,7 @@ angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
         /*jshint validthis:true */
         if (!colour) { colour = this.config.fill; }
         var i;
-        for (i = 0; i < this.map.length; i += this.offset) {
+        for (i = 0; i < this.map.length; i += this.config.offset) {
             this.map[i] = colour.r;
             this.map[i + 1] = colour.g;
             this.map[i + 2] = colour.b;
@@ -226,11 +255,14 @@ angular.module('JSVida-Bitmap', []).factory('Bitmap', [function () {
     Bitmap.prototype.getPixelG = getPixelG;
     Bitmap.prototype.getPixelB = getPixelB;
     Bitmap.prototype.getPixelA = getPixelA;
-    Bitmap.prototype.get1d = get1d;
+    Bitmap.prototype.setPixelOffset = setPixelOffset;
+    Bitmap.prototype.getPixelOffset = getPixelOffset;
+    Bitmap.prototype.getOffset = getOffset;
+    Bitmap.prototype.get1d = xyToOffset;
     Bitmap.prototype.fill = fill;
 
     /**
-     * @param config {{ x: {number}, y: {number}, format: 'RGB'|'RGBA', data: Array.<number> }}
+     * @param config {{ x: number, y: number, format: 'RGB'|'RGBA', data: Array.<number> }}
      * @returns {Bitmap}
      * @constructor
      */

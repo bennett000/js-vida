@@ -63,53 +63,6 @@ describe('Bitmap Class', function () {
         expect(b.map.length).toBe(16);
     }));
 
-    it('get1d method should convert x/y to linear offset, (0,0)->0',
-       inject(function (Bitmap) {
-           var b = new Bitmap(validConfig);
-           expect(b.get1d(0, 0)).toBe(0);
-       }));
-
-    it('get1d method should convert x/y to linear offset, (5, 0)->5',
-       inject(function (Bitmap) {
-           var b = new Bitmap(validConfig);
-           expect(b.get1d(5, 0)).toBe(5);
-       }));
-
-    it('get1d method should convert x/y to linear offset, (0, 5)->50',
-       inject(function (Bitmap) {
-           var b = new Bitmap(validConfig);
-           expect(b.get1d(0, 5)).toBe(50);
-       }));
-
-    it('get1d method should wrap x < 0',
-       inject(function (Bitmap) {
-           var b = new Bitmap(validConfig);
-           expect(b.get1d(-1, 5)).toBe(59);
-       }));
-
-    it('get1d method should wrap y < 0',
-       inject(function (Bitmap) {
-           var b = new Bitmap(validConfig);
-           expect(b.get1d(5, -2)).toBe(85);
-       }));
-
-    it('get1d method should wrap beyond limits  x > this.config.x',
-       inject(function (Bitmap) {
-           var b = new Bitmap(validConfig);
-           expect(b.get1d(11, 5)).toBe(51);
-       }));
-
-    it('get1d method should wrap beyond limits  y > this.config.y',
-       inject(function (Bitmap) {
-           var b = new Bitmap(validConfig);
-           expect(b.get1d(5, 10)).toBe(5);
-       }));
-
-    it('get1d method should convert x/y to linear offset, (5, 5)->55',
-       inject(function (Bitmap) {
-           var b = new Bitmap(validConfig);
-           expect(b.get1d(5, 5)).toBe(55);
-       }));
 
     it('setPixel should set specific pixel (0, 0)', inject(function (Bitmap) {
         var b = new Bitmap(validConfig);
@@ -119,6 +72,27 @@ describe('Bitmap Class', function () {
         expect(b.map[2]).toBe(102);
         expect(b.map[3]).toBe(103);
     }));
+
+    it('setPixelOffset should set specific pixel 0', inject(function (Bitmap) {
+        var b = new Bitmap(validConfig);
+        b.setPixelOffset(0, 100, 101, 102, 103);
+        expect(b.map[0]).toBe(100);
+        expect(b.map[1]).toBe(101);
+        expect(b.map[2]).toBe(102);
+        expect(b.map[3]).toBe(103);
+    }));
+
+    it('setPixelOffset should return undefined on invalid',
+       inject(function (Bitmap) {
+           var b = new Bitmap(validConfig);
+           expect(b.setPixelOffset(50000, 100, 101, 102, 103)).toBeUndefined();
+       }));
+
+    it('setPixelOffset should return undefined on invalid',
+       inject(function (Bitmap) {
+           var b = new Bitmap(validConfig);
+           expect(b.setPixelOffset(-10, 100, 101, 102, 103)).toBeUndefined();
+       }));
 
     it('setPixel should set specific pixel (1, 10)', inject(function (Bitmap) {
         var b = new Bitmap(validConfig);
@@ -145,6 +119,29 @@ describe('Bitmap Class', function () {
         expect(c.b).toBe(255);
         expect(c.a).toBe(255);
     }));
+
+    it('getPixelOffset should return the colour at 0', inject(function (Bitmap) {
+        var b = new Bitmap(validConfig),
+            c = b.getPixelOffset(0);
+        expect(c.r).toBe(255);
+        expect(c.g).toBe(255);
+        expect(c.b).toBe(255);
+        expect(c.a).toBe(255);
+    }));
+
+    it('getPixelOffset should return null if invalid > length',
+       inject(function (Bitmap) {
+           var b = new Bitmap(validConfig),
+               c = b.getPixelOffset(5000);
+           expect(c).toBe(null);
+       }));
+
+    it('getPixelOffset should return null if invalid < 0',
+       inject(function (Bitmap) {
+           var b = new Bitmap(validConfig),
+               c = b.getPixelOffset(-5);
+           expect(c).toBe(null);
+       }));
 
     it('getPixel should return the colour at (0, 0) (RGB)',
        inject(function (Bitmap) {
@@ -183,4 +180,9 @@ describe('Bitmap Class', function () {
            b.setPixel(0, 0, 5, 6, 7, 8);
            expect(b.getPixelA(0, 0)).toBe(8);
        }));
+
+    it('getOffset should return null when invalid', inject(function (Bitmap) {
+        var b = new Bitmap(validConfig);
+        expect(b.getOffset(5000)).toBe(null);
+    }));
 });
