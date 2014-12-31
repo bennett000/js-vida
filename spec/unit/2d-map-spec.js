@@ -47,52 +47,164 @@ describe('Generic Map class', function () {
     describe('getNeighbour tests', function () {
         it('getNeighbour (0, 0) left', inject(function (Map2d) {
             var m = new Map2d({x: 10, y: 10});
-            expect(m.getNeighbour(0, 0, -1, 0).toString()).
-            toBe({x: 9, y: 0}.toString());
+            expect(m.getNeighbour(0, 0, -1, 0).x).toBe(9);
+            expect(m.getNeighbour(0, 0, -1, 0).y).toBe(0);
         }));
 
         it('getNeighbour (0, 0) right', inject(function (Map2d) {
             var m = new Map2d({x: 10, y: 10});
-            expect(m.getNeighbour(0, 0, 1, 0).toString()).
-            toBe({x: 1, y: 0}.toString());
+            expect(m.getNeighbour(0, 0, 1, 0).x).toBe(1);
+            expect(m.getNeighbour(0, 0, 1, 0).y).toBe(0);
         }));
 
         it('getNeighbour (0, 0) top', inject(function (Map2d) {
             var m = new Map2d({x: 10, y: 10});
-            expect(m.getNeighbour(0, 0, 0, 1).toString()).
-            toBe({x: 0, y: 9}.toString());
+            expect(m.getNeighbour(0, 0, 0, 1).x).toBe(0);
+            expect(m.getNeighbour(0, 0, 0, 1).y).toBe(1);
         }));
 
         it('getNeighbour (0, 0) bottom', inject(function (Map2d) {
             var m = new Map2d({x: 10, y: 10});
-            expect(m.getNeighbour(0, 0, 0, -1).toString()).
-            toBe({x: 0, y: 1}.toString());
+            expect(m.getNeighbour(0, 0, 0, -1).x).toBe(0);
+            expect(m.getNeighbour(0, 0, 0, -1).y).toBe(9);
         }));
 
         it('getNeighbour (0, 0) top left', inject(function (Map2d) {
             var m = new Map2d({x: 10, y: 10});
-            expect(m.getNeighbour(0, 0, -1, 1).toString()).
-            toBe({x: 9, y: 9}.toString());
+            expect(m.getNeighbour(0, 0, -1, 1).x).toBe(9);
+            expect(m.getNeighbour(0, 0, -1, 1).y).toBe(1);
         }));
 
         it('getNeighbour (0, 0) top right', inject(function (Map2d) {
             var m = new Map2d({x: 10, y: 10});
-            expect(m.getNeighbour(0, 0, 1, 1).toString()).
-            toBe({x: 1, y: 9}.toString());
+            expect(m.getNeighbour(0, 0, 1, 1).x).toBe(1);
+            expect(m.getNeighbour(0, 0, 1, 1).y).toBe(1);
         }));
 
         it('getNeighbour (0, 0) bottom left', inject(function (Map2d) {
             var m = new Map2d({x: 10, y: 10});
-            expect(m.getNeighbour(0, 0, -1, -1).toString()).
-            toBe({x: 9, y: 9}.toString());
+            expect(m.getNeighbour(0, 0, -1, -1).x).toBe(9);
+            expect(m.getNeighbour(0, 0, -1, -1).y).toBe(9);
         }));
 
         it('getNeighbour (0, 0) bottom right', inject(function (Map2d) {
             var m = new Map2d({x: 10, y: 10});
-            expect(m.getNeighbour(0, 0, 1, -1).toString()).
-            toBe({x: 1, y: 9}.toString());
-            console.log('whaaa', m.getNeighbour(0, 0, 1, -1), 'x1, y9');
+            expect(m.getNeighbour(0, 0, 1, -1).x).toBe(1);
+            expect(m.getNeighbour(0, 0, 1, -1).y).toBe(9);
         }));
+
+
+        // 5, 5's
+        it('getNeighbour (5, 5); left', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(5, 5, -1, 0).x).toBe(4);
+            expect(m.getNeighbour(5, 5, -1, 0).y).toBe(5);
+        }));
+
+        it('getNeighbour (5, 5); right', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(5, 5, 1, 0).x).toBe(6);
+            expect(m.getNeighbour(5, 5, 1, 0).y).toBe(5);
+        }));
+
+        it('getNeighbour (5, 5); top', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(5, 5, 0, 1).x).toBe(5);
+            expect(m.getNeighbour(5, 5, 0, 1).y).toBe(6);
+        }));
+
+        it('getNeighbour (5, 5); bottom', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(5, 5, 0, -1).x).toBe(5);
+            expect(m.getNeighbour(5, 5, 0, -1).y).toBe(4);
+        }));
+
+        it('getNeighbour (5, 5); top left', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(5, 5, -1, 1).x).toBe(4);
+            expect(m.getNeighbour(5, 5, -1, 1).y).toBe(6);
+        }));
+
+        it('getNeighbour (5, 5); top right', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(5, 5, 1, 1).x).toBe(6);
+            expect(m.getNeighbour(5, 5, 1, 1).y).toBe(6);
+        }));
+
+        it('getNeighbour (5, 5); bottom left', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(5, 5, -1, -1).x).toBe(4);
+            expect(m.getNeighbour(5, 5, -1, -1).y).toBe(4);
+        }));
+
+        it('getNeighbour (5, 5); bottom right', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(5, 5, 1, -1).x).toBe(6);
+            expect(m.getNeighbour(5, 5, 1, -1).y).toBe(4);
+        }));
+
+
+        // 9, 9's
+        it('getNeighbour (9, 9); left', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(9, 9, -1, 0).x).toBe(8);
+            expect(m.getNeighbour(9, 9, -1, 0).y).toBe(9);
+        }));
+
+        it('getNeighbour (9, 9); right', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(9, 9, 1, 0).x).toBe(0);
+            expect(m.getNeighbour(9, 9, 1, 0).y).toBe(9);
+        }));
+
+        it('getNeighbour (9, 9); top', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(9, 9, 0, 1).x).toBe(9);
+            expect(m.getNeighbour(9, 9, 0, 1).y).toBe(0);
+        }));
+
+        it('getNeighbour (9, 9); bottom', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(9, 9, 0, -1).x).toBe(9);
+            expect(m.getNeighbour(9, 9, 0, -1).y).toBe(8);
+        }));
+
+        it('getNeighbour (9, 9); top left', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(9, 9, -1, 1).x).toBe(8);
+            expect(m.getNeighbour(9, 9, -1, 1).y).toBe(0);
+        }));
+
+        it('getNeighbour (9, 9); top right', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(9, 9, 1, 1).x).toBe(0);
+            expect(m.getNeighbour(9, 9, 1, 1).y).toBe(0);
+        }));
+
+        it('getNeighbour (9, 9); bottom left', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(9, 9, -1, -1).x).toBe(8);
+            expect(m.getNeighbour(9, 9, -1, -1).y).toBe(8);
+        }));
+
+        it('getNeighbour (9, 9); bottom right', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10});
+            expect(m.getNeighbour(9, 9, 1, -1).x).toBe(0);
+            expect(m.getNeighbour(9, 9, 1, -1).y).toBe(8);
+        }));
+
+        it('getNeighbour should clamp x vals', inject(function (Map2d) {
+            var m = new Map2d({ x: 10, y: 10});
+            expect(m.getNeighbour(0, 0, 100, 0).x).toBe(9);
+            expect(m.getNeighbour(0, 0, -100, 0).x).toBe(1);
+        }));
+
+        it('getNeighbour should clamp y vals', inject(function (Map2d) {
+            var m = new Map2d({ x: 10, y: 10});
+            expect(m.getNeighbour(0, 0, 0, 100).y).toBe(9);
+            expect(m.getNeighbour(0, 0, 0, -100).y).toBe(1);
+        }));
+
     });
 });
 

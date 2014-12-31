@@ -106,25 +106,43 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
     function getNeighbour(x, y, dx, dy, result) {
         /*jshint validthis:true*/
         if (!result) {
-            result = {};
+            result = { x: 0, y: 0 };
         }
+        x = +x;
         y = +y;
         dx = +dx;
         dy = +dy;
+
+        // invalid cases
+        if (dx >= this.config.x) {
+            dx = this.config.x - 1;
+        }
+        if (dy >= this.config.y) {
+            dy = this.config.y - 1;
+        }
+
+        if (Math.abs(dx) >= this.config.x) {
+            dx = (this.config.x - 1) * -1;
+            console.log('x', dx, result.x, x, x + dx);
+        }
+        if (Math.abs(dy) >= this.config.y) {
+            dy = (this.config.y - 1) * -1;
+        }
+
+        // go
         result.x = x + dx;
         result.y = y + dy;
-
         if (+result.x >= this.config.x) {
             result.x = result.x - this.config.x;
         }
         if (+result.x < 0) {
-            result.x = this.config.x - result.x;
+            result.x = this.config.x - Math.abs(result.x);
         }
         if (result.y >= this.config.y) {
             result.y = result.y - this.config.y;
         }
         if (result.y < 0) {
-            result.y = this.config.y - result.y;
+            result.y = this.config.y - Math.abs(result.y);
         }
         return result;
     }
