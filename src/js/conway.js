@@ -46,84 +46,70 @@ angular.module('JSVida-Conway', [
     defaultHeight = 128;
 
     /**
-     * @param seed {Array.<Number>}
-     * @param x [number}
-     * @param y {number}
-     * @returns {Array}
-     */
-    function validateSeed(seed, x, y) {
-        if (!Array.isArray(seed)) {
-            seed = [];
-        }
-        x = +x || 0;
-        y = +y || 0;
-
-        if ((x * y) < seed.length) {
-            seed = [];
-        }
-        return seed;
-    }
-
-    /**
-     * @param seed {Array.<number>}
-     * @param x {number}
-     * @param y {number}
-     * @returns {Array.<number>}
-     */
-    function completeSeed(seed, x, y) {
-        x = +x || 0;
-        y = +y || 0;
-        seed = validateSeed(seed, x, y);
-        var i;
-
-        for (i = 0; i < (x * y); i += 1) {
-            if (seed[i]) {
-                seed[i] = 1;
-            } else {
-                seed[i] = 0;
-            }
-        }
-
-        return seed;
-    }
-
-    /**
-     *
-     * @param offset
-     * @param min
-     * @param max
-     * @returns {*}
-     */
-    function wrapOffset(offset, min, max) {
-        if (offset < min) {
-            offset = max + offset;
-        }
-
-        if (offset > max) {
-            offset = offset - max;
-        }
-
-        return offset;
-    }
-
-    /**
-     * @param offset {number}
-     * @param relX {number}
-     * @param relY {number}
-     * @param limitX {number}
-     * @param limitY {number}
+     * @param cell {*}
      * @returns {number}
      */
-    function getNeighbour(offset, relX, relY, limitX, limitY) {
-        /** @type {number} */
-        var neighbour, limit = limitX * limitY;
+    function validateCell(cell) {
+        if (!cell) {
+            return 0;
+        }
+        if (typeof cell !== 'number') {
+            return 0;
+        }
+        return 1;
+    }
 
-        // perform x operation
-        neighbour = offset + relX;
-        // perform y operation
-        neighbour -= relY * (limitX - 1);
+    /**
+     * Checks this for a given configuration/seed if not return array
+     * @returns {Array}
+     */
+    function validateSeed() {
+        /*jshint validthis:true */
+        var that = this;
 
-        return wrapOffset(neighbour, 0, limit);
+        /**
+         * @param col {*}
+         * @returns {Array}
+         */
+        function checkCols(col) {
+            if (!Array.isArray(col)) {
+                return [];
+            }
+            if (col.length > that.config.y) {
+                return [];
+            }
+            return col.map(validateCell);
+        }
+
+        if (!Array.isArray(this.config.seed)) {
+            return [];
+        }
+        if (this.config.seed.length > this.config.x) {
+            return [];
+        }
+
+        return this.config.seed.map(checkCols);
+    }
+
+    /**
+     * Complete a validated seed array
+     * @returns {Array}
+     */
+    function completeSeed() {
+        /*jshint validthis:true */
+        var seed = validateSeed.call(this),
+            i, j;
+        for (i = 0; i < this.config.x; i += 1) {
+            if (!Array.isArray(seed[i])) {
+                seed[i] = [];
+            }
+            for (j = 0; j < this.config.y; j += 1) {
+                if (j > seed[i].length) {
+                    seed[i].push(0);
+                }
+            }
+        }
+        return seed;
     }
 
 
@@ -334,7 +320,7 @@ angular.module('JSVida-Conway', [
     }
 
     /**
-     * @param conf {{ x: number, y: number, seed: Array.<number>=, tickInterval: number=, popMin: number=, popMax: number= }}
+     * @param conf {{ x: number, y: number, seed: Array.<Array>=, tickInterval: number=, popMin: number=, popMax: number= }}
      * @returns {Conway}
      * @constructor
      */
@@ -346,11 +332,13 @@ angular.module('JSVida-Conway', [
         this.config = validateConfig(conf);
 
         var that = makeListener(this),
-            /** @type {Array.<number>} */
-            buffer = [],
-            /** @type {Array.<number>} */
+            /** @type {Array.<Array>} */
+            frontBuffer = [],
+            /** @type {Array.<Array>} */
+            backBuffer = [],
+            /** @type {Array.<{ x: number, y: number}>} */
             livingList = [],
-            /** @type {Array.<number>} */
+            /** @type {Array.<{ x: number, y: number}>} */
             birthingList = [],
             /** @type {boolean} */
             doStop = false,
@@ -359,8 +347,10 @@ angular.module('JSVida-Conway', [
             /** @type {boolean} */
             isRunning = false;
 
-        this.config.seed = completeSeed(this.config.seed, this.config.x,
+        frontBuffer = this.completeSeed(this.config.seed, this.config.x,
                                         this.config.y);
+        // clone
+        backBuffer = frontBuffer.map(function (el) { return el; });
 
         livingList = Object.keys(this.config.seed).filter(function (el) {
             return +that.config.seed[el] === 1;
@@ -374,14 +364,14 @@ angular.module('JSVida-Conway', [
                 return;
             }
             if (didFlip) {
-                brute.call(that, buffer, that.config.seed);
+                brute.call(that, backBuffer, that.config.seed);
                 //lifeScan.call(that, livingList, birthingList, buffer, seed);
                 that.triggerSync('tick', that.config.seed);
                 didFlip = false;
             } else {
-                brute.call(that, that.config.seed, buffer);
+                brute.call(that, that.config.seed, backBuffer);
                 //lifeScan.call(that, livingList, birthingList, buffer, seed);
-                that.triggerSync('tick', buffer);
+                that.triggerSync('tick', backBuffer);
                 didFlip = true;
             }
             //livingList = livingList.concat(birthingList).filter(function (el) {
@@ -408,13 +398,12 @@ angular.module('JSVida-Conway', [
         this.stop = stop;
     }
 
-    Conway.completeSeed = completeSeed;
-    Conway.validateSeed = validateSeed;
+    Conway.prototype.completeSeed = completeSeed;
+    Conway.prototype.validateSeed = validateSeed;
     Conway.brute = brute;
     Conway.validateConfig = validateConfig;
     Conway.clamp = clamp;
     Conway.lifeScan = lifeScan;
-    Conway.getNeighbour = getNeighbour;
     Conway.liveNeighbours = liveNeighbours;
 
     return Conway;
