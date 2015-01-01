@@ -57,11 +57,13 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
     /** @const */
     var defaultWidth = 128,
     /** @const */
-    defaultHeight = 128;
+    defaultHeight = 128,
+    /** @const */
+    defaultWrapMode = 'flat';
 
     /**
-     * @param conf {{ x: number=, y: number=, Constructor: function(...)=, factory: function(...)= }}
-     * @returns {{x: number, y: number, Constructor: function(...)|null, factory: function(...)|null}}
+     * @param conf {{ x: number=, y: number=, Constructor: function(...)=, factory: function(...)=, wrapMode: string= }}
+     * @returns {{x: number, y: number, Constructor: function(...)|null, factory: function(...)|null, wrapMode: string }}
      */
     function validateConfig(conf) {
         conf = conf || {};
@@ -72,6 +74,8 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
         conf.factory = angular.isFunction(conf.factory) ?
                        conf.factory : null;
 
+        conf.wrapMode = conf.wrapMode || defaultWrapMode;
+
         if (!Array.isArray(conf.seed)) {
             conf.seed = null;
         }
@@ -81,7 +85,8 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
             y: +conf.y || defaultHeight,
             seed: conf.seed,
             Constructor: conf.Constructor,
-            factory: conf.factory
+            factory: conf.factory,
+            wrapMode: conf.wrapMode
         };
     }
 
@@ -101,6 +106,78 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
                 this.map[i].push(null);
             }
         }
+    }
+
+    /**
+     * @param x {number}
+     * @param y {number}
+     * @param dx {number}
+     * @param dy {number}
+     * @param result {{ x: number, y: number }}
+     * @returns {{ x: number, y: number }}
+     */
+    function getNeighbourFlat(x, y, dx, dy, result) {
+        /*jshint validthis:true */
+        // go
+        result.x = x + dx;
+        result.y = y + dy;
+        if (+result.x >= this.config.x) {
+            result.x = result.x - this.config.x;
+        }
+        if (+result.x < 0) {
+            result.x = this.config.x - Math.abs(result.x);
+        }
+        if (result.y >= this.config.y) {
+            result.y = result.y - this.config.y;
+        }
+        if (result.y < 0) {
+            result.y = this.config.y - Math.abs(result.y);
+        }
+        return result;
+    }
+
+    /**
+     * @param result {{ x: number, y: number }}
+     */
+    function sphereMapWrapX(result) {
+        /*jshint validthis:true */
+        var half = Math.floor(this.config.x / 2);
+
+        if (result.x >= half) {
+            result.x = Math.abs(half - result.x);
+        } else {
+            result.x = half + result.x;
+        }
+    }
+
+    /**
+     * @param x {number}
+     * @param y {number}
+     * @param dx {number}
+     * @param dy {number}
+     * @param result {{ x: number, y: number }}
+     * @returns {{ x: number, y: number }}
+     */
+    function getNeighbourSphere(x, y, dx, dy, result) {
+        /*jshint validthis:true */
+        // go
+        result.x = x + dx;
+        result.y = y + dy;
+        if (+result.x >= this.config.x) {
+            result.x = result.x - this.config.x;
+        }
+        if (+result.x < 0) {
+            result.x = this.config.x - Math.abs(result.x);
+        }
+        if (result.y >= this.config.y) {
+            result.y = this.config.y - Math.abs(result.y - this.config.y) - dy;
+            sphereMapWrapX.call(this, result);
+        }
+        if (result.y < 0) {
+            result.y = Math.abs(result.y) + dy;
+            sphereMapWrapX.call(this, result);
+        }
+        return result;
     }
 
     /**
@@ -136,22 +213,11 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
             dy = (this.config.y - 1) * -1;
         }
 
-        // go
-        result.x = x + dx;
-        result.y = y + dy;
-        if (+result.x >= this.config.x) {
-            result.x = result.x - this.config.x;
+        if (this.config.wrapMode === 'sphere') {
+            return getNeighbourSphere.call(this, x, y, dx, dy, result);
+        } else {
+            return getNeighbourFlat.call(this, x, y, dx, dy, result);
         }
-        if (+result.x < 0) {
-            result.x = this.config.x - Math.abs(result.x);
-        }
-        if (result.y >= this.config.y) {
-            result.y = result.y - this.config.y;
-        }
-        if (result.y < 0) {
-            result.y = this.config.y - Math.abs(result.y);
-        }
-        return result;
     }
 
     function reset() {
@@ -317,7 +383,7 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
 
     /**
      * Generic map class
-     * @param conf {{ x: number, y: number, Constructor: function(...)=, factory: function(...)=, seed: Array.<Array> }}
+     * @param conf {{ x: number, y: number, Constructor: function(...)=, factory: function(...)=, seed: Array.<Array>, wrapMode: string= }}
      * @returns {Map2d}
      * @constructor
      */

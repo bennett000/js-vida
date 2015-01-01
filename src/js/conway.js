@@ -326,6 +326,7 @@ angular.module('JSVida-Conway', [
                 }
 
             });
+            buffer.config.wrapMode = 'sphere';
 
             //livingList = Object.keys(that.config.seed).filter(function (el) {
             //    return +that.config.seed[el] === 1;

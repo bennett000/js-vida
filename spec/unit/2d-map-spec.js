@@ -93,7 +93,6 @@ describe('Generic Map class', function () {
             expect(m.getNeighbour(0, 0, 1, -1).y).toBe(9);
         }));
 
-
         // 5, 5's
         it('getNeighbour (5, 5); left', inject(function (Map2d) {
             var m = new Map2d({x: 10, y: 10});
@@ -203,6 +202,44 @@ describe('Generic Map class', function () {
             var m = new Map2d({x: 10, y: 10});
             expect(m.getNeighbour(0, 0, 0, 100).y).toBe(9);
             expect(m.getNeighbour(0, 0, 0, -100).y).toBe(1);
+        }));
+
+        // SPHERE MODE
+        /** @todo test for odd sizes */
+        it('getNeighbour sphere (0, 0), (0, -1)', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10, wrapMode: 'sphere'});
+            expect(m.getNeighbour(0, 0, 0, -1).x).toBe(5);
+            expect(m.getNeighbour(0, 0, 0, -1).y).toBe(0);
+        }));
+
+        it('getNeighbour sphere (5, 0), (-1, -1)', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10, wrapMode: 'sphere'});
+            expect(m.getNeighbour(5, 0, -1, -1).x).toBe(9);
+            expect(m.getNeighbour(5, 0, -1, -1).y).toBe(0);
+        }));
+
+        it('getNeighbour sphere (0, 0), (-1, -1)', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10, wrapMode: 'sphere'});
+            expect(m.getNeighbour(0, 0, -1, -1).x).toBe(4);
+            expect(m.getNeighbour(0, 0, -1, -1).y).toBe(0);
+        }));
+
+        it('getNeighbour sphere (9, 9), (0, 1)', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10, wrapMode: 'sphere'});
+            expect(m.getNeighbour(9, 9, 0, 1).x).toBe(4);
+            expect(m.getNeighbour(9, 9, 0, 1).y).toBe(9);
+        }));
+
+        it('getNeighbour sphere (5, 9), (1, 1)', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10, wrapMode: 'sphere'});
+            expect(m.getNeighbour(5, 9, 1, 1).x).toBe(1);
+            expect(m.getNeighbour(5, 9, 1, 1).y).toBe(9);
+        }));
+
+        it('getNeighbour sphere (9, 9), (1, 1)', inject(function (Map2d) {
+            var m = new Map2d({x: 10, y: 10, wrapMode: 'sphere'});
+            expect(m.getNeighbour(9, 9, 1, 1).x).toBe(5);
+            expect(m.getNeighbour(9, 9, 1, 1).y).toBe(9);
         }));
 
     });
