@@ -65,24 +65,23 @@ angular.module('JSVida-3d-Objects', [
     }
 
     return getSphere;
-}]).
-factory('physicsCube', ['three', 'physi', function (three, physi) {
-            'use strict';
+}]).factory('physicsCube', ['three', 'physi', function (three, physi) {
+    'use strict';
 
-            function getCube(callbacks) {
-                callbacks = callbacks || {};
+    function getCube(callbacks) {
+        callbacks = callbacks || {};
 
-                var geometry = new three.BoxGeometry(1.5, 0.5, 1.5),
-                    material = physi.createMaterial(new three.MeshBasicMaterial({color: 0x00ff00}), 0.5),
-                    box = new physi.BoxMesh(geometry, material, 1);
+        var geometry = new three.BoxGeometry(1.5, 0.5, 1.5),
+            material = physi.createMaterial(new three.MeshBasicMaterial({color: 0x00ff00}), 0.5),
+            box = new physi.BoxMesh(geometry, material, 1);
 
-                if (angular.isFunction(callbacks.collision)) {
-                    box.addEventListener('collision', callbacks.collision);
-                }
+        if (angular.isFunction(callbacks.collision)) {
+            box.addEventListener('collision', callbacks.collision);
+        }
 
-                return box;
-            }
+        return box;
+    }
 
-            return getCube;
+    return getCube;
 
-        }]);
+}]);

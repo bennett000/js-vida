@@ -57,6 +57,11 @@ describe('Vida 3D Objects', function () {
            inject(function (textureSphere) {
                expect(textureSphere() instanceof THREE.Mesh).toBe(true);
            }));
+
+        it('should ignore invalid params',
+           inject(function (textureSphere) {
+               expect(textureSphere(463) instanceof THREE.Mesh).toBe(true);
+           }));
     });
 
     describe('Physics Cube', function () {

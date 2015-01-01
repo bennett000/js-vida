@@ -25,6 +25,11 @@ describe('Generic Map class', function () {
         module('JSVida-Map2D');
     });
 
+    it('should be a constructor', inject(function (Map2d) {
+        expect(Map2d() instanceof Map2d).toBe(true);
+        expect(new Map2d() instanceof Map2d).toBe(true);
+    }));
+
     it('should have a map array', inject(function (Map2d) {
         var m = new Map2d();
         expect(Array.isArray(m.map)).toBe(true);
