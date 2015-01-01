@@ -108,7 +108,7 @@ angular.module('JSVida-Conway', [
 
     /**
      * @param map {Map2d}
-     * @param changes {Array}
+     * @param changes {Array.<function(...)>}
      */
     function brute(map, changes) {
         /*jshint validthis:true */
@@ -167,21 +167,22 @@ angular.module('JSVida-Conway', [
     }
 
     /**
-     * @param living {Array.<number>}
-     * @param birthing {Array.<number>}
-     * @param seed {Array.<number>}
-     * @param result {Array.<number>}
+     * @param living {Array.<{ x: number, y: number }>}
+     * @param birthing {Array.<{ x: number, y: number }>}
+     * @param map {Map2d}
+     * @param offsetPool {Array.<{ x: number, y: number }>}
+     * @param changes {Array.<function(...)>}
      */
-    function lifeScan(living, birthing, seed, result) {
+    function lifeScan(living, birthing, map, offsetPool, changes) {
         /*jshint validthis:true */
-        var offset, i, j, that = this;
+        var offset, i, j, that = this, scanned = {};
         living.forEach(function (cell, position) {
             // skip garbage
             if (cell === null) { return; }
 
             // process main cell, which must be alive, but it can die
-            if (!processCell.call(that, seed, result, cell,
-                                  that.config.x, that.config.y)) {
+            if (!processCell.call(that, map, cell.x, cell.y)) {
+                offsetPool.push(cell);
                 living[position] = null;
                 that.triggerSync('update', cell, false);
             }
@@ -196,9 +197,9 @@ angular.module('JSVida-Conway', [
                     // process a neighbour
                     offset = getNeighbour(cell, i, j,
                                           that.config.x, that.config.y);
-                    if ((!seed[offset]) && (birthing.indexOf(offset) === -1)) {
+                    if ((!map[offset]) && (birthing.indexOf(offset) === -1)) {
                         // if a birth happens, register it
-                        if (processCell.call(that, seed, result, offset,
+                        if (processCell.call(that, map, offsetPool, offset,
                                              that.config.x, that.config.y)) {
                             birthing.push(offset);
                         }
