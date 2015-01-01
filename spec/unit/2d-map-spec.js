@@ -194,13 +194,13 @@ describe('Generic Map class', function () {
         }));
 
         it('getNeighbour should clamp x vals', inject(function (Map2d) {
-            var m = new Map2d({ x: 10, y: 10});
+            var m = new Map2d({x: 10, y: 10});
             expect(m.getNeighbour(0, 0, 100, 0).x).toBe(9);
             expect(m.getNeighbour(0, 0, -100, 0).x).toBe(1);
         }));
 
         it('getNeighbour should clamp y vals', inject(function (Map2d) {
-            var m = new Map2d({ x: 10, y: 10});
+            var m = new Map2d({x: 10, y: 10});
             expect(m.getNeighbour(0, 0, 0, 100).y).toBe(9);
             expect(m.getNeighbour(0, 0, 0, -100).y).toBe(1);
         }));
@@ -266,4 +266,152 @@ describe('xyToOffset class method - depends on config.x/config.y', function () {
        inject(function (xyToOffset) {
            expect(xyToOffset.call(that, 5, 5)).toBe(55);
        }));
+
+    it('validateLoadData should should force an array of arrays',
+       inject(function (Map2d) {
+           var c = new Map2d();
+           expect(Array.isArray(
+           Map2d.prototype.validateLoadData.call({
+                                                     config: {
+                                                         x: 10,
+                                                         y: 10,
+                                                         seed: NaN
+                                                     }
+                                                 }))).toBe(true);
+
+       }));
+
+    it('validateLoadData should ignore over-sized y arrays',
+       inject(function (Map2d) {
+           var c = new Map2d({x: 1, y: 1, seed: [[5, 5, 5, 5, 5, 5]]});
+           expect(c.validateLoadData()[0].length).toBe(0);
+       }));
+
+    it('validateLoadData should ignore over-sized x arrays',
+       inject(function (Map2d) {
+           var c = new Map2d({x: 1, y: 1, seed: [5, 5, 5, 5, 5, 5]});
+           expect(c.validateLoadData().length).toBe(0);
+       }));
+
+    it('validateLoadData should force seed to type Array.<Array>',
+       inject(function (Map2d) {
+           var c = new Map2d({x: 10, y: 10, seed: [5, 5, 5, 5, 5, 5]});
+           expect(Array.isArray(c.validateLoadData()[2])).toBe(true);
+           expect(Array.isArray(c.validateLoadData()[0])).toBe(true);
+       }));
+
+    it('load should load a valid map', inject(function (Map2d) {
+        var m = new Map2d({x: 2, y: 2});
+        m.load([[5, 4], [7, 6]]);
+        expect(m.map.length).toBe(2);
+        expect(m.map[0].length).toBe(2);
+        expect(m.map[1].length).toBe(2);
+    }));
+
+    it('load should load a valid map', inject(function (Map2d) {
+        var m = new Map2d({x: 2, y: 2});
+        m.load([[5, 4], [7, 6]]);
+        expect(m.map.length).toBe(2);
+        expect(m.map[0].length).toBe(2);
+        expect(m.map[1].length).toBe(2);
+    }));
+
+    it('get should return the expected cell', inject(function (Map2d) {
+        var m = new Map2d({x: 2, y: 2});
+        m.load([[5, 4], [7, 6]]);
+        expect(m.get(0, 1)).toBe(4);
+    }));
+
+    it('get should return undefined if x out of bounds',
+       inject(function (Map2d) {
+           var m = new Map2d({x: 2, y: 2});
+           m.load([[5, 4], [7, 6]]);
+           expect(m.get(10, 1)).toBe(undefined);
+       }));
+
+    it('get should return undefined if y out of bounds',
+       inject(function (Map2d) {
+           var m = new Map2d({x: 2, y: 2});
+           m.load([[5, 4], [7, 6]]);
+           expect(m.get(0, 10)).toBe(undefined);
+       }));
+
+    it('set should return the expected cell', inject(function (Map2d) {
+        var m = new Map2d({x: 2, y: 2});
+        m.load([[5, 4], [7, 6]]);
+        expect(m.set(0, 1, 77)).toBe(true);
+        expect(m.get(0, 1)).toBe(77);
+    }));
+
+    it('set should return false if x of bounds', inject(function (Map2d) {
+        var m = new Map2d({x: 2, y: 2});
+        m.load([[5, 4], [7, 6]]);
+        expect(m.set(-10, 1)).toBe(false);
+    }));
+
+    it('set should return false if y of bounds', inject(function (Map2d) {
+        var m = new Map2d({x: 2, y: 2});
+        m.load([[5, 4], [7, 6]]);
+        expect(m.set(0, -10)).toBe(false);
+    }));
+
+    it('cell should get if there is no third param', inject(function (Map2d) {
+        var m = new Map2d({x: 2, y: 2, seed: [[5, 4],[7,6]]});
+        expect(m.cell(0,0)).toBe(5);
+    }));
+
+    it('cell should set if there is a third param', inject(function (Map2d) {
+        var m = new Map2d({x: 2, y: 2, seed: [[5, 4],[7,6]]});
+        expect(m.cell(0,0, 80)).toBe(true);
+        expect(m.cell(0, 0)).toBe(80);
+    }));
+
+    it('walk the array left/right top/bottom', inject(function (Map2d) {
+        var m = new Map2d({x: 2, y: 2, seed: [[5, 4],[7,6]]}),
+            count = 0;
+        m.walk(function lambda(val) {
+            switch (count) {
+                case 0:
+                    expect(val).toBe(5);
+                    break;
+                case 1:
+                    expect(val).toBe(4);
+                    break;
+                case 2:
+                    expect(val).toBe(7);
+                    break;
+                default:
+                    expect(val).toBe(6);
+                    break;
+            }
+            count += 1;
+        });
+        expect(count).toBe(4);
+    }));
+
+    it('walk uses the map\'s context', inject(function (Map2d) {
+        var m = new Map2d({x: 2, y: 2, seed: [[5, 4],[7,6]]});
+        m.walk(function lambda(val) {
+            expect(this === m).toBe(true);
+        });
+    }));
+
+    it('walk returns the map\'s context', inject(function (Map2d) {
+        var m = new Map2d({x: 2, y: 2, seed: [[5, 4],[7,6]]});
+        expect(m.walk(function lambda(val) {})).toBe(m);
+    }));
+
+    it('skip walk if no callback provided', inject(function (Map2d) {
+        var m = new Map2d({x: 2, y: 2, seed: [[5, 4],[7,6]]});
+        expect(m.walk()).toBeUndefined();
+    }));
+
+    it('clone returns a copy of the object', inject(function (Map2d) {
+        var m = new Map2d({x: 2, y: 2, seed: [[5, 4],[7,6]]}),
+            n = m.clone();
+
+        expect(m === n).toBe(false);
+        expect(n instanceof Map2d).toBe(true);
+        expect(n.get(1,1)).toBe(6);
+    }));
 });

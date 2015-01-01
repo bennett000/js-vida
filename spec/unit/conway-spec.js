@@ -38,61 +38,29 @@ describe('Conway implementation', function () {
         expect(typeof Conway().stop).toBe('function');
     }));
 
-    it('validateSeed should should force an array of arrays',
-       inject(function (Conway) {
-           var c = new Conway();
-           expect(Array.isArray(
-           Conway.prototype.validateSeed.call({
-                                                  config: {
-                                                      x: 10,
-                                                      y: 10,
-                                                      seed: NaN
-                                                  }
-                                              }))).toBe(true);
 
+    it('constructor should apply defaults on invalid config',
+       inject(function (Conway) {
+           var c = new Conway({x: 10, y: 10, popMin: 57, popMax: 3});
+           expect(c.config.popMin).toBe(2);
+           expect(c.config.popMax).toBe(3);
        }));
 
-    it('validateSeed should ignore over-sized y arrays',
-       inject(function (Conway) {
-           var c = new Conway({x: 1, y: 1, seed: [[5, 5, 5, 5, 5, 5]]});
-           expect(c.validateSeed()[0].length).toBe(0);
-       }));
+    it('clamp function should force a minimum value', inject(function (Conway) {
+        expect(Conway.clamp(-10, 0, 5)).toBe(0);
+    }));
 
-    it('validateSeed should ignore over-sized x arrays',
-       inject(function (Conway) {
-           var c = new Conway({x: 1, y: 1, seed: [5, 5, 5, 5, 5, 5]});
-           expect(c.validateSeed().length).toBe(0);
-       }));
+    it('clamp function should force a maximum value', inject(function (Conway) {
+        expect(Conway.clamp(10, 0, 5)).toBe(5);
+    }));
 
-    it('validateSeed should force seed to type Array.<Array>',
-       inject(function (Conway) {
-           var c = new Conway({x: 10, y: 10, seed: [5, 5, 5, 5, 5, 5]});
-           expect(Array.isArray(c.validateSeed()[2])).toBe(true);
-           expect(Array.isArray(c.validateSeed()[0])).toBe(true);
-       }));
+    it('clamp function should pass a valid value', inject(function (Conway) {
+        expect(Conway.clamp(3, 0, 5)).toBe(3);
+    }));
 
-    it('validateSeed should force cells to be numbers',
-       inject(function (Conway) {
-           var c = new Conway({x: 10, y: 10, seed: [[false, null, {}]]});
-           expect(c.validateSeed()[0][0]).toBe(0);
-           expect(c.validateSeed()[0][1]).toBe(0);
-           expect(c.validateSeed()[0][2]).toBe(0);
-       }));
-
-    it('validateSeed should force cells that are non-numeric to zero',
-       inject(function (Conway) {
-           var c = new Conway({x: 10, y: 10, seed: [[false, [], true]]});
-           expect(c.validateSeed()[0][0]).toBe(0);
-           expect(c.validateSeed()[0][1]).toBe(0);
-           expect(c.validateSeed()[0][2]).toBe(0);
-       }));
-
-    it('validateSeed should force cells to be 0/1',
-       inject(function (Conway) {
-           var c = new Conway({x: 10, y: 10, seed: [[NaN, 1, 56]]});
-           expect(c.validateSeed()[0][0]).toBe(0);
-           expect(c.validateSeed()[0][1]).toBe(1);
-           expect(c.validateSeed()[0][2]).toBe(1);
-       }));
+    it('clamp function should be inclusive', inject(function (Conway) {
+        expect(Conway.clamp(5, 0, 5)).toBe(5);
+        expect(Conway.clamp(0, 0, 5)).toBe(0);
+    }));
 
 });

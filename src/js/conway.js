@@ -22,8 +22,9 @@
  */
 /*global angular*/
 angular.module('JSVida-Conway', [
-    'JSVida'
-]).factory('Conway', ['$timeout', 'makeListener', function ($timeout, makeListener) {
+    'JSVida',
+    'JSVida-Map2D'
+]).factory('Conway', ['$timeout', 'makeListener', 'Map2d', function ($timeout, makeListener, Map2d) {
     'use strict';
 
     /** @const */
@@ -43,124 +44,62 @@ angular.module('JSVida-Conway', [
     /** @const */
     defaultWidth = 128,
     /** @const */
-    defaultHeight = 128;
+    defaultHeight = 128,
+    /** @type {{ x: number, y: number }} */
+    offsetTemp = {x: 0, y: 0};
+
+    function getNeighbourStatus(map, x, y, dx, dy) {
+        map.getNeighbour(x, y, dx, dy, offsetTemp);
+        return map.get(offsetTemp.x, offsetTemp.y);
+    }
 
     /**
-     * @param cell {*}
+     * @param map {Map2d}
+     * @param x {number}
+     * @param y {number}
      * @returns {number}
      */
-    function validateCell(cell) {
-        if (!cell) {
-            return 0;
-        }
-        if (typeof cell !== 'number') {
-            return 0;
-        }
-        return 1;
-    }
-
-    /**
-     * Checks this for a given configuration/seed if not return array
-     * @returns {Array}
-     */
-    function validateSeed() {
-        /*jshint validthis:true */
-        var that = this;
-
-        /**
-         * @param col {*}
-         * @returns {Array}
-         */
-        function checkCols(col) {
-            if (!Array.isArray(col)) {
-                return [];
-            }
-            if (col.length > that.config.y) {
-                return [];
-            }
-            return col.map(validateCell);
-        }
-
-        if (!Array.isArray(this.config.seed)) {
-            return [];
-        }
-        if (this.config.seed.length > this.config.x) {
-            return [];
-        }
-
-        return this.config.seed.map(checkCols);
-    }
-
-    /**
-     * Complete a validated seed array
-     * @returns {Array}
-     */
-    function completeSeed() {
-        /*jshint validthis:true */
-        var seed = validateSeed.call(this),
-            i, j;
-        for (i = 0; i < this.config.x; i += 1) {
-            if (!Array.isArray(seed[i])) {
-                seed[i] = [];
-            }
-            for (j = 0; j < this.config.y; j += 1) {
-                if (j > seed[i].length) {
-                    seed[i].push(0);
-                }
-            }
-        }
-        return seed;
-    }
-
-
-    /**
-     * @param seed {Array.<Number>}
-     * @param offset {number}
-     * @param limitX {number}
-     * @param limitY {number}
-     * @returns {number}
-     */
-    function liveNeighbours(seed, offset, limitX, limitY) {
+    function liveNeighbours(map, x, y) {
         /** @type {number} */
         var count = 0;
 
         // top left
-        if (seed[getNeighbour(offset, -1, 1, limitX, limitY)]) {
+        if (getNeighbourStatus(map, x, y, -1, 1)) {
             count += 1;
         }
 
         // top
-        if (seed[getNeighbour(offset, 0, 1, limitX, limitY)]) {
+        if (getNeighbourStatus(map, x, y, 0, 1)) {
             count += 1;
         }
 
         // top right
-        if (seed[getNeighbour(offset, 1, 1, limitX, limitY)]) {
+        if (getNeighbourStatus(map, x, y, 1, 1)) {
             count += 1;
         }
 
         // mid left
-        if (seed[getNeighbour(offset, -1, 0, limitX, limitY)]) {
+        if (getNeighbourStatus(map, x, y, -1, 0)) {
             count += 1;
         }
 
         // mid right
-        if (seed[getNeighbour(offset, 1, 0, limitX, limitY)]) {
+        if (getNeighbourStatus(map, x, y, 1, 0)) {
             count += 1;
         }
 
         // bottom left
-        if (seed[getNeighbour(offset, -1, -1, limitX, limitY)]) {
+        if (getNeighbourStatus(map, x, y, -1, -1)) {
             count += 1;
         }
 
         // bottom
-        if (seed[getNeighbour(offset, 0, -1, limitX, limitY)]) {
+        if (getNeighbourStatus(map, x, y, 0, -1)) {
             count += 1;
         }
 
         // bottom right
-        if (seed[getNeighbour(offset, 1, -1, limitX, limitY)]) {
+        if (getNeighbourStatus(map, x, y, 1, -1)) {
             count += 1;
         }
 
@@ -168,63 +107,62 @@ angular.module('JSVida-Conway', [
     }
 
     /**
-     * @param seed {Array.<number>}
-     * @param result {Array.<number>}
-     * @param x {number} limit
-     * @param y {number} limit
+     * @param map {Map2d}
+     * @param changes {Array}
      */
-    function brute(seed, result, x, y) {
+    function brute(map, changes) {
         /*jshint validthis:true */
-        var change, that = this, isAlive;
-        seed.forEach(function (cell, offset) {
-            change = processCell.call(that, seed, result, offset, x, y);
+        var that = this, isAlive;
+        map.walk(function (cell, x, y) {
+            var change = processCell.call(that, map, x, y);
             if (change === 1) {
                 isAlive = true;
             } else {
                 isAlive = false;
             }
-            that.triggerSync('update', offset, isAlive);
+
+            // change any of the changers
+            if (cell !== change) {
+                changes.push(function () {
+                    map.set(x, y, change);
+                });
+                that.triggerSync('update', x, y, isAlive);
+            }
         });
 
     }
 
     /**
-     * @param seed {Array.<number>}
-     * @param result {Array.<number>}
-     * @param offset {number}
+     * @param map {Map2d}
+     * @param x {number}
+     * @param y {number}
      * @returns {number}
      */
-    function processCell(seed, result, offset) {
+    function processCell(map, x, y) {
         /*jshint validthis:true */
         /** @type {number} */
-        var neighbours = liveNeighbours(seed, offset, this.config.x,
-                                        this.config.y),
-        cell = seed[offset];
+        var neighbours = liveNeighbours(map, x, y),
+        cell = map.get(x, y);
         // alive cases
         if (cell === 1) {
             // under pop case
             if (neighbours < this.config.popMin) {
-                result[offset] = 0;
                 return 0;
             }
             // even pop case
             if (neighbours <= this.config.popMax) {
-                result[offset] = 1;
                 return 1;
             }
             // over pop case
-            result[offset] = 0;
             return 0;
         }
         // dead cases
 
         // birth case
         if (neighbours === 3) {
-            result[offset] = 1;
             return 1;
         }
         // dead is dead case
-        result[offset] = 0;
         return 0;
     }
 
@@ -299,7 +237,7 @@ angular.module('JSVida-Conway', [
             conf.seed = [];
         }
         conf.tickInterval = clamp(+conf.tickInterval, minTickInterval,
-                                    maxTickInterval) || defaultTickInterval;
+                                  maxTickInterval) || defaultTickInterval;
         conf.popMin = clamp(+conf.popMin, minPop, maxPop) || defaultPopMin;
         conf.popMax = clamp(+conf.popMax, minPop, maxPop) || defaultPopMax;
 
@@ -332,10 +270,8 @@ angular.module('JSVida-Conway', [
         this.config = validateConfig(conf);
 
         var that = makeListener(this),
-            /** @type {Array.<Array>} */
-            frontBuffer = [],
-            /** @type {Array.<Array>} */
-            backBuffer = [],
+            /** @type {Map2d} */
+            buffer,
             /** @type {Array.<{ x: number, y: number}>} */
             livingList = [],
             /** @type {Array.<{ x: number, y: number}>} */
@@ -343,37 +279,22 @@ angular.module('JSVida-Conway', [
             /** @type {boolean} */
             doStop = false,
             /** @type {boolean} */
-            didFlip = false,
-            /** @type {boolean} */
             isRunning = false;
 
-        frontBuffer = this.completeSeed(this.config.seed, this.config.x,
-                                        this.config.y);
-        // clone
-        backBuffer = frontBuffer.map(function (el) { return el; });
-
-        livingList = Object.keys(this.config.seed).filter(function (el) {
-            return +that.config.seed[el] === 1;
-        });
-
         function onTick() {
+            var changes = [];
             if (doStop) {
                 doStop = false;
                 isRunning = false;
-                didFlip = false;
                 return;
             }
-            if (didFlip) {
-                brute.call(that, backBuffer, that.config.seed);
-                //lifeScan.call(that, livingList, birthingList, buffer, seed);
-                that.triggerSync('tick', that.config.seed);
-                didFlip = false;
-            } else {
-                brute.call(that, that.config.seed, backBuffer);
-                //lifeScan.call(that, livingList, birthingList, buffer, seed);
-                that.triggerSync('tick', backBuffer);
-                didFlip = true;
-            }
+            brute.call(that, buffer, changes);
+            //lifeScan.call(that, livingList, birthingList, buffer, seed);
+            that.triggerSync('tick', buffer);
+            changes.forEach(function (change) {
+                change();
+            });
+
             //livingList = livingList.concat(birthingList).filter(function (el) {
             //    return el !== null;
             //});
@@ -387,19 +308,36 @@ angular.module('JSVida-Conway', [
             }
             isRunning = true;
             onTick();
-            return that.config.seed;
+            return buffer;
         }
 
         function stop() {
             doStop = true;
         }
 
+        function init() {
+            // Initialize Buffers
+            buffer = new Map2d(conf).walk(function zero(cell, x, y) {
+                /*jshint validthis: true */
+                if (cell) {
+                    this.set(x, y, 1);
+                } else {
+                    this.set(x, y, 0);
+                }
+
+            });
+
+            //livingList = Object.keys(that.config.seed).filter(function (el) {
+            //    return +that.config.seed[el] === 1;
+            //});
+        }
+
         this.start = start;
         this.stop = stop;
+
+        init();
     }
 
-    Conway.prototype.completeSeed = completeSeed;
-    Conway.prototype.validateSeed = validateSeed;
     Conway.brute = brute;
     Conway.validateConfig = validateConfig;
     Conway.clamp = clamp;
