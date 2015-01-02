@@ -120,4 +120,17 @@ describe('TypedList', function () {
            l.gc();
            expect(l.size()).toBe(1);
        }));
+
+    it('get should return recycled objects', inject(function (TypedList) {
+        var l = new TypedList(validConfig),
+        test1 = { x: 0, y: 1},
+        test2 = { x: 5, y: 5},
+        compare;
+        l.push(test1);
+        l.push(test2);
+        l.delete(0);
+        compare = l.newEl();
+        expect(compare).toBe(test1);
+        expect(compare).not.toBe(test2);
+    }));
 });

@@ -63,4 +63,108 @@ describe('Conway implementation', function () {
         expect(Conway.clamp(0, 0, 5)).toBe(0);
     }));
 
+    it('newPoint should return a simple new point', inject(function (Conway) {
+        expect(Conway.newPoint(0, 0).x).toBe(0);
+        expect(Conway.newPoint(0, 0).y).toBe(0);
+    }));
+
+    it('newPoint should return a new object', inject(function (Conway) {
+        var p1 = Conway.newPoint(), p2 = Conway.newPoint();
+        expect(p1).not.toBe(p2);
+    }));
+
 });
+
+function getTestConway(testAlgo) {
+    'use strict';
+
+    function testConway() {
+        var validConfig = {x: 5, y: 5, tickInterval: 100, popMin: 2, popMax: 3};
+
+        // template
+        validConfig.seed = [
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
+        ];
+
+        beforeEach(function () {
+            delete validConfig.seed;
+            module('JSVida-Conway');
+        });
+
+        function run(fn) {
+            return fn();
+        }
+
+        it(testAlgo + ' should not directly make the changes',
+           inject(function (Conway) {
+               validConfig.seed = [
+                   [0, 0, 0, 0, 0],
+                   [0, 1, 1, 0, 0],
+                   [0, 1, 0, 0, 0],
+                   [0, 0, 0, 0, 0],
+                   [0, 0, 0, 0, 0]
+               ];
+
+               var c = new Conway(validConfig),
+                   changes = [];
+
+               c[testAlgo](changes);
+               // changes not made
+               expect(c.map.get(2, 2)).toBe(0);
+               changes.forEach(run);
+               // changes made
+               expect(changes.length).toBe(1);
+           }));
+
+        it(testAlgo + ' should make the expected changes - I',
+           inject(function (Conway) {
+               validConfig.seed = [
+                   [0, 0, 0, 0, 0], // [0, 0, 0, 0, 0]
+                   [0, 1, 1, 0, 0], // [0, 1, 1, 0, 0]
+                   [0, 1, 0, 0, 0], // [0, 1, 1, 0, 0]
+                   [0, 0, 0, 0, 0], // [0, 0, 0, 0, 0]
+                   [0, 0, 0, 0, 0]  // [0, 0, 0, 0, 0]
+               ];
+
+               var c = new Conway(validConfig),
+                   changes = [];
+
+               c[testAlgo](changes);
+               changes.forEach(run);
+               expect(changes.length).toBe(1);
+               expect(c.map.get(2, 2)).toBe(1);
+           }));
+
+        it(testAlgo + ' should make the expected changes - II',
+           inject(function (Conway) {
+               validConfig.seed = [
+                   [0, 0, 0, 0, 0], // [0, 0, 1, 0, 0]
+                   [0, 1, 1, 1, 0], // [0, 1, 0, 1, 0]
+                   [0, 1, 1, 0, 0], // [0, 1, 0, 1, 0]
+                   [0, 0, 0, 0, 0], // [0, 0, 0, 0, 0]
+                   [0, 0, 0, 0, 0]  // [0, 0, 0, 0, 0]
+               ];
+               var c = new Conway(validConfig),
+                   changes = [];
+
+               c[testAlgo](changes);
+               changes.forEach(run);
+               expect(changes.length).toBe(4);
+               expect(c.map.get(0, 2)).toBe(1);
+               expect(c.map.get(1, 2)).toBe(0);
+               expect(c.map.get(2, 2)).toBe(0);
+               expect(c.map.get(2, 3)).toBe(1);
+           }));
+    }
+
+    return testConway;
+}
+
+
+describe('Conway - Brute Force', getTestConway('brute'));
+
+describe('Conway - Living List', getTestConway('lifeScan'));

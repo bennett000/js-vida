@@ -112,6 +112,7 @@ angular.module('JSVida-List', [
         this.newEl = pool.get;
         this.delete = deleteEl;
         this.push = push;
+        this.trash = pool.put;
     }
 
     return TypedList;

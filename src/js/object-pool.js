@@ -69,10 +69,11 @@ angular.module('JSVida-ObjectPool', [
          * @returns {*}
          */
         function get() {
+            var args = Array.prototype.slice.call(arguments, 0);
             if (pool.length) {
                 return pool.pop();
             }
-            return conf.factory.apply(null, arguments);
+            return conf.factory.apply(null, args);
         }
 
         /**
