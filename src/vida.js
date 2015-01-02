@@ -157,14 +157,14 @@ angular.module('JSVida', [
 }]).factory('planetConway', ['textureSphere', 'three', 'between', 'Conway', 'Bitmap', function (textureSphere, three, between, Conway, Bitmap) {
     'use strict';
 
-    var res = 256,
+    var res = 64,
         map = new Bitmap({
                              x: res,
                              y: res,
                              format: 'RGB',
                              fill: {r: 255, g: 0, b: 0}
                          }),
-        c = new Conway({x:res, y:res, seed:getRandomMap(res, res)}),
+        c = new Conway({x: res, y: res, seed: getRandomMap(res, res)}),
         material = {
             map: new three.DataTexture(map.map, res, res, three.RGBFormat)
         },
@@ -182,7 +182,7 @@ angular.module('JSVida', [
 
         for (i = 0; i < x; i += 1) {
             result.push([]);
-            for (j = 0; j < y; j +=1) {
+            for (j = 0; j < y; j += 1) {
                 roll = between(0, 100);
                 if (roll > 75) {
                     result[i].push(1);
@@ -203,10 +203,10 @@ angular.module('JSVida', [
     function onUpdate(x, y, isAlive) {
         if (isAlive) {
             map.setPixel(x, y,
-                               colours.life.r, colours.life.g, colours.life.b);
+                         colours.life.r, colours.life.g, colours.life.b);
         } else {
             map.setPixel(x, y,
-                               colours.death.r, colours.death.g, colours.death.b);
+                         colours.death.r, colours.death.g, colours.death.b);
         }
     }
 
@@ -231,10 +231,10 @@ angular.module('JSVida', [
         c.start().walk(function (el, x, y) {
             if (el === 1) {
                 map.setPixel(x, y, colours.life.r, colours.life.g,
-                                   colours.life.b);
+                             colours.life.b);
             } else {
                 map.setPixel(x, y, colours.death.r, colours.death.g,
-                                   colours.death.b);
+                             colours.death.b);
             }
         });
         updateMaterial();
@@ -250,10 +250,10 @@ angular.module('JSVida', [
     return getPlanet;
 }])
 //.run(['scene', 'planetConway', 'universe', function (scene, planetConway, universe) {
-//         'use strict';
+//    'use strict';
 //
-//         scene.scene.add(planetConway());
-//     }])
+//    scene.scene.add(planetConway());
+//}])
 //.run(['universe', 'procomyte', function (universe, procomyte) {
 //    'use strict';
 //

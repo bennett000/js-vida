@@ -23,8 +23,9 @@
 /*global angular*/
 angular.module('JSVida-Conway', [
     'JSVida',
-    'JSVida-Map2D'
-]).factory('Conway', ['$timeout', 'makeListener', 'Map2d', function ($timeout, makeListener, Map2d) {
+    'JSVida-Map2D',
+    'JSVida-ObjectPool'
+]).factory('Conway', ['$timeout', 'makeListener', 'Map2d', 'ObjectPool', function ($timeout, makeListener, Map2d, ObjectPool) {
     'use strict';
 
     /** @const */
@@ -159,7 +160,7 @@ angular.module('JSVida-Conway', [
         // dead cases
 
         // birth case
-        if (neighbours === 3) {
+        if (neighbours === this.config.popMax) {
             return 1;
         }
         // dead is dead case
@@ -167,24 +168,58 @@ angular.module('JSVida-Conway', [
     }
 
     /**
+     * @param birthing {Array.<{ x: number, y: number }>}
+     * @param map {Map2d}
+     * @param offsetPool {ObjectPool}
+     * @param changes {Array.<function(...)>}
+     * @param x {number}
+     * @param y {number}
+     */
+    function lifeScanNeighbour(birthing, map, offsetPool, changes, x, y) {
+        /*jshint validthis:true*/
+        var that = this,
+            change = processCell.call(this, map, x, y);
+        // register births
+        if (change === 1) {
+            birthing.push(offsetPool.get(x, y));
+            that.triggerSync('update', x, y, true);
+            changes.push(function () {
+                map.set(x, y, 1);
+                console.log('birth', x, y, map.get(x, y));
+            });
+        }
+    }
+
+    /**
      * @param living {Array.<{ x: number, y: number }>}
      * @param birthing {Array.<{ x: number, y: number }>}
      * @param map {Map2d}
-     * @param offsetPool {Array.<{ x: number, y: number }>}
+     * @param offsetPool {ObjectPool}
      * @param changes {Array.<function(...)>}
      */
     function lifeScan(living, birthing, map, offsetPool, changes) {
         /*jshint validthis:true */
-        var offset, i, j, that = this, scanned = {};
+        var i, j, that = this, scanKey, scanned = {};
         living.forEach(function (cell, position) {
+            var x = cell.x, y = cell.y;
             // skip garbage
             if (cell === null) { return; }
 
+            if (map.get(x, y) !== 1) {
+                console.log('what', x, y);
+            }
             // process main cell, which must be alive, but it can die
-            if (!processCell.call(that, map, cell.x, cell.y)) {
-                offsetPool.push(cell);
+            if (!processCell.call(that, map, x, y)) {
+                // object pooling
+                offsetPool.put(cell);
+                // nullify
                 living[position] = null;
-                that.triggerSync('update', cell, false);
+                // trigger
+                that.triggerSync('update', x, y, false);
+                changes.push(function () {
+                    map.set(x, y, 0);
+                    console.log('kill', x, y, map.get(x, y), living[position]);
+                });
             }
 
             // process the neighbours
@@ -195,16 +230,19 @@ angular.module('JSVida-Conway', [
                         continue;
                     }
                     // process a neighbour
-                    offset = getNeighbour(cell, i, j,
-                                          that.config.x, that.config.y);
-                    if ((!map[offset]) && (birthing.indexOf(offset) === -1)) {
-                        // if a birth happens, register it
-                        if (processCell.call(that, map, offsetPool, offset,
-                                             that.config.x, that.config.y)) {
-                            birthing.push(offset);
-                        }
-                        that.triggerSync('update', offset, true);
+                    offsetTemp = map.getNeighbour(x, y, i, j, offsetTemp);
+                    // skip living, as they will be processed in turn
+                    if (map.get(offsetTemp.x, offsetTemp.y) === 1) {
+                        return;
                     }
+                    scanKey = offsetTemp.x + '.' + offsetTemp.y;
+                    // skip scanned
+                    if (scanned[scanKey]) {
+                        return;
+                    }
+                    lifeScanNeighbour.call(that, birthing, map, offsetPool,
+                                           changes, offsetTemp.x, offsetTemp.y);
+                    scanned[scanKey] = true;
                 }
             }
         });
@@ -280,27 +318,50 @@ angular.module('JSVida-Conway', [
             /** @type {boolean} */
             doStop = false,
             /** @type {boolean} */
-            isRunning = false;
+            isRunning = false,
+            /** @type {ObjectPool} */
+            offsetPool = new ObjectPool({factory: newPoint});
+        var started = false;
+
+        /**
+         * @params x {number=}
+         * @params y {number=}
+         * @returns {{x: number, y: number}}
+         */
+        function newPoint(x, y) {
+            x = +x || 0;
+            y = +y || 0;
+            return {x: x, y: y};
+        }
 
         function onTick() {
-            var changes = [];
+            var changes = [],
+                birthingList = [];
             if (doStop) {
                 doStop = false;
                 isRunning = false;
                 return;
             }
-            brute.call(that, buffer, changes);
-            //lifeScan.call(that, livingList, birthingList, buffer, seed);
-            that.triggerSync('tick', buffer);
+            console.log('LL1', livingList.length);
+            //brute.call(that, buffer, changes);
+            lifeScan.call(that, livingList, birthingList,
+                          buffer, offsetPool, changes);
+            that.triggerSync('tick');
             changes.forEach(function (change) {
                 change();
             });
 
-            //livingList = livingList.concat(birthingList).filter(function (el) {
-            //    return el !== null;
-            //});
-            //birthingList = [];
+            console.log('LL2', livingList.length);
+            livingList = livingList.filter(function (el) {
+                return el !== null;
+            }).concat(birthingList);
+            console.log('LL3', livingList.length);
+
             $timeout(onTick, that.config.tickInterval);
+            if (!started) {
+                started = true;
+                console.log('first tick over');
+            }
         }
 
         function start() {
@@ -317,10 +378,13 @@ angular.module('JSVida-Conway', [
         }
 
         function init() {
+            var offset;
             // Initialize Buffers
+            livingList = [];
             buffer = new Map2d(conf).walk(function zero(cell, x, y) {
                 /*jshint validthis: true */
                 if (cell) {
+                    livingList.push(offsetPool.get(x, y));
                     this.set(x, y, 1);
                 } else {
                     this.set(x, y, 0);
@@ -328,10 +392,6 @@ angular.module('JSVida-Conway', [
 
             });
             buffer.config.wrapMode = 'sphere';
-
-            //livingList = Object.keys(that.config.seed).filter(function (el) {
-            //    return +that.config.seed[el] === 1;
-            //});
         }
 
         this.start = start;

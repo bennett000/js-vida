@@ -16,7 +16,8 @@ var BOOTSTRAP = Object.freeze({
     '/js/org-procomyte.js',
     '/js/conway.js',
     '/js/2d-map.js',
-    '/js/object-pool.js'
+    '/js/object-pool.js',
+    '/js/list.js'
   ]
 });
 
