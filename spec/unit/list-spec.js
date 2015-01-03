@@ -25,7 +25,10 @@ describe('TypedList', function () {
         module('JSVida-List');
     });
 
-    var validConfig = {factory: function (el) { return el; }};
+    var validConfig = {
+        factory: function (el) { return { val: el }; },
+        recycle: function (obj, el) { obj.val = el; return obj; }
+    };
 
     it('should be a constructor', inject(function (TypedList) {
         expect(TypedList(validConfig) instanceof TypedList).toBe(true);
@@ -43,68 +46,61 @@ describe('TypedList', function () {
         }).toThrow();
     }));
 
-    it('pushing a valid el should increase size', inject(function (TypedList) {
-        var l = new TypedList(validConfig);
-        l.push(l.newEl({x: 5}));
-        expect(l.size()).toBe(1);
+    it('throw without a recycle', inject(function (TypedList) {
+        expect(function () {
+            var l = new TypedList({ factory: angular.noop });
+        }).toThrow();
     }));
 
-    it('pushing nothing should do nothing', inject(function (TypedList) {
+    it('pushing a valid el should increase size', inject(function (TypedList) {
         var l = new TypedList(validConfig);
-        l.push(l.newEl());
-        expect(l.size()).toBe(0);
+        l.push(5, 7);
+        expect(l.size()).toBe(1);
     }));
 
     it('walk should do nothing with no callback', inject(function (TypedList) {
         var l = new TypedList(validConfig);
-        l.push(l.newEl({x: 5}));
+        l.push(5, 0);
         expect(l.walk()).toBe(l);
     }));
 
     it('walk should traverse the list', inject(function (TypedList) {
         var l = new TypedList(validConfig), count = 0;
-        l.push(l.newEl({x: 5}));
-        l.push(l.newEl({x: 6}));
+        l.push(5, 6);
+        l.push(6, 5);
         l.walk(function () { count += 1; })
         expect(count).toBe(2);
     }));
 
     it('walk should skip garbage', inject(function (TypedList) {
-        var l = new TypedList(validConfig);
-        l.push(l.newEl({x: 5}));
-        l.push(l.newEl({x: 6}));
-        l.push(l.newEl({x: 7}));
-        l.delete(1);
-        l.walk(function (el) { expect(el === 6).toBe(false); });
+        var l = new TypedList(validConfig), kill;
+        l.push(5);
+        l.push(6);
+        kill = l.push(7);
+        kill();
+        l.walk(function (el) { expect(el === 7).toBe(false); });
     }));
 
     it('walk should use the list\'s context', inject(function (TypedList) {
         var l = new TypedList(validConfig);
-        l.push(l.newEl({x: 5}));
+        l.push(5, 0);
         l.walk(function () { expect(this).toBe(l); });
     }));
 
 
-    it('delete should skip out of bounds',
+    it('deletes should _not_ immediately affect size',
        inject(function (TypedList) {
-           var l = new TypedList(validConfig);
-           l.push(l.newEl({x: 5}));
-           expect(l.delete(10)).toBe(false);
-       }));
-
-    it('delete should _not_ immediately affect size',
-       inject(function (TypedList) {
-           var l = new TypedList(validConfig);
-           l.push(l.newEl({x: 5}));
-           expect(l.delete(0)).toBe(true);
+           var l = new TypedList(validConfig),
+               d = l.push(5, 0);
+           d();
            expect(l.size()).toBe(1);
        }));
 
     it('gc should purge garbage',
        inject(function (TypedList) {
-           var l = new TypedList(validConfig);
-           l.push(l.newEl({x: 5}));
-           expect(l.delete(0)).toBe(true);
+           var l = new TypedList(validConfig),
+               d =  l.push(5, 0);
+           d();
            expect(l.size()).toBe(1);
            l.gc();
            expect(l.size()).toBe(0);
@@ -112,25 +108,12 @@ describe('TypedList', function () {
 
     it('gc should keep values',
        inject(function (TypedList) {
-           var l = new TypedList(validConfig);
-           l.push(l.newEl({x: 5}));
-           l.push(l.newEl({x: 7}));
-           expect(l.delete(0)).toBe(true);
+           var l = new TypedList(validConfig),
+               d =  l.push(5, 0);
+           l.push(7, 0);
+           d();
            expect(l.size()).toBe(2);
            l.gc();
            expect(l.size()).toBe(1);
        }));
-
-    it('get should return recycled objects', inject(function (TypedList) {
-        var l = new TypedList(validConfig),
-        test1 = { x: 0, y: 1},
-        test2 = { x: 5, y: 5},
-        compare;
-        l.push(test1);
-        l.push(test2);
-        l.delete(0);
-        compare = l.newEl();
-        expect(compare).toBe(test1);
-        expect(compare).not.toBe(test2);
-    }));
 });

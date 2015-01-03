@@ -75,7 +75,15 @@ describe('Conway implementation', function () {
 
 });
 
-function getTestConway(testAlgo) {
+/**
+ * The following are "end to end" conway tests.  Each it block features a
+ * human readable Conway "board", and where applicable a solution "board" in
+ * comments.
+ *
+ * @param testAlgorithm {string}
+ * @returns {function(...)}
+ */
+function getTestConway(testAlgorithm) {
     'use strict';
 
     function testConway() {
@@ -99,7 +107,7 @@ function getTestConway(testAlgo) {
             return fn();
         }
 
-        it(testAlgo + ' should not directly make the changes',
+        it(testAlgorithm + ' should not directly make the changes',
            inject(function (Conway) {
                validConfig.seed = [
                    [0, 0, 0, 0, 0],
@@ -112,7 +120,7 @@ function getTestConway(testAlgo) {
                var c = new Conway(validConfig),
                    changes = [];
 
-               c[testAlgo](changes);
+               c[testAlgorithm](changes);
                // changes not made
                expect(c.map.get(2, 2)).toBe(0);
                changes.forEach(run);
@@ -120,7 +128,7 @@ function getTestConway(testAlgo) {
                expect(changes.length).toBe(1);
            }));
 
-        it(testAlgo + ' should make the expected changes - I',
+        it(testAlgorithm + ' should make the expected changes - I',
            inject(function (Conway) {
                validConfig.seed = [
                    [0, 0, 0, 0, 0], // [0, 0, 0, 0, 0]
@@ -133,13 +141,13 @@ function getTestConway(testAlgo) {
                var c = new Conway(validConfig),
                    changes = [];
 
-               c[testAlgo](changes);
+               c[testAlgorithm](changes);
                changes.forEach(run);
                expect(changes.length).toBe(1);
                expect(c.map.get(2, 2)).toBe(1);
            }));
 
-        it(testAlgo + ' should make the expected changes - II',
+        it(testAlgorithm + ' should make the expected changes - II',
            inject(function (Conway) {
                validConfig.seed = [
                    [0, 0, 0, 0, 0], // [0, 0, 1, 0, 0]
@@ -151,13 +159,65 @@ function getTestConway(testAlgo) {
                var c = new Conway(validConfig),
                    changes = [];
 
-               c[testAlgo](changes);
+               c[testAlgorithm](changes);
                changes.forEach(run);
                expect(changes.length).toBe(4);
                expect(c.map.get(0, 2)).toBe(1);
                expect(c.map.get(1, 2)).toBe(0);
                expect(c.map.get(2, 2)).toBe(0);
                expect(c.map.get(2, 3)).toBe(1);
+           }));
+
+        it(testAlgorithm + ' should make the expected changes - III',
+           inject(function (Conway) {
+               validConfig.seed = [
+                   [0, 0, 0, 0, 0], // [0, 0, 0, 0, 0]
+                   [0, 0, 1, 0, 0], // [0, 0, 0, 0, 0]
+                   [0, 1, 0, 0, 0], // [0, 0, 0, 0, 0]
+                   [0, 0, 0, 0, 0], // [0, 0, 0, 0, 0]
+                   [0, 0, 0, 0, 0]  // [0, 0, 0, 0, 0]
+               ];
+
+               var c = new Conway(validConfig),
+                   changes = [];
+
+               c[testAlgorithm](changes);
+               changes.forEach(run);
+               expect(changes.length).toBe(2);
+               expect(c.map.get(1, 2)).toBe(0);
+               expect(c.map.get(2, 1)).toBe(0);
+           }));
+
+        it(testAlgorithm + ' should make the expected changes - IV',
+           inject(function (Conway) {
+               validConfig.seed = [
+                   [0, 0, 0, 0, 0], // [0, 0, 1, 0, 0] // [0, 0, 0, 0, 0]
+                   [0, 1, 1, 1, 0], // [0, 0, 1, 0, 0] // [0, 1, 1, 1, 0]
+                   [0, 0, 0, 0, 0], // [0, 0, 1, 0, 0] // [0, 0, 0, 0, 0]
+                   [0, 0, 0, 0, 0], // [0, 0, 0, 0, 0] // [0, 0, 0, 0, 0]
+                   [0, 0, 0, 0, 0]  // [0, 0, 0, 0, 0] // [0, 0, 0, 0, 0]
+               ];
+
+               var c = new Conway(validConfig),
+                   changes = [];
+
+               // turn 1
+               c[testAlgorithm](changes);
+               changes.forEach(run);
+               expect(changes.length).toBe(4);
+               expect(c.map.get(2, 2)).toBe(1);
+               expect(c.map.get(0, 2)).toBe(1);
+               expect(c.map.get(1, 1)).toBe(0);
+               expect(c.map.get(1, 3)).toBe(0);
+               // turn 2
+               changes = [];
+               c[testAlgorithm](changes);
+               changes.forEach(run);
+               expect(changes.length).toBe(4);
+               expect(c.map.get(2, 2)).toBe(0);
+               expect(c.map.get(0, 2)).toBe(0);
+               expect(c.map.get(1, 1)).toBe(1);
+               expect(c.map.get(1, 3)).toBe(1);
            }));
     }
 

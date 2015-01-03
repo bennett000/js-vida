@@ -23,42 +23,89 @@
 /*global angular*/
 angular.module('JSVida-List', [
     'JSVida-ObjectPool'
-]).factory('TypedList', ['ObjectPool', function (ObjectPool) {
+]).factory('TypedList', ['ObjectPool', '$log', function (ObjectPool, $log) {
     'use strict';
 
+    /**
+     * @param data {*=}
+     * @returns {{data: (*|null)}}
+     */
+    function newTypeTransport(data) {
+        return {
+            data: data || null
+        };
+    }
+
+    /**
+     * @param obj {Object}
+     * @param data {*=}
+     * @returns {{data: (*|null)}}
+     */
+    function recycleTypeTransport(obj, data) {
+        obj.data = data;
+        return obj;
+    }
+
+    /**
+     * @param conf {{ factory: function(...), max: number=, pool: ObjectPool= }}
+     * @throws if factory is not a function
+     * @returns {{max: number=, factory: function(...), pool: ObjectPool }}
+     */
     function validateConfig(conf) {
+        /*jshint validthis:true */
         conf = conf || {};
 
         if (!angular.isFunction(conf.factory)) {
             throw new TypeError('TypedList requires a factory function');
         }
 
+        if (!angular.isFunction(conf.recycle)) {
+            throw new TypeError('TypedList requires a recycle function');
+        }
+
+        conf.pool = conf.pool || new ObjectPool({
+                                                    factory: conf.factory,
+                                                    recycle: conf.recycle,
+                                                    max: conf.max
+                                                });
+
         return {
             max: conf.max,
-            factory: conf.factory
+            factory: conf.factory,
+            pool: conf.pool
         };
     }
 
 
+    /**
+     * @param conf {{ factory: function(...), max: number=, pool: ObjectPool= }}
+     * @returns {TypedList}
+     * @constructor
+     */
     function TypedList(conf) {
         if (!(this instanceof TypedList)) {
             return new TypedList(conf);
         }
 
-        this.config = validateConfig(conf);
+        this.config = this.validateConfig(conf);
+        this.pool = this.config.pool;
 
         /** @type {ObjectPool} */
-        var pool = new ObjectPool({
-                                      factory: this.config.factory,
-                                      max: this.config.max
-                                  }),
+        var transportPool = new ObjectPool({
+                                               factory: newTypeTransport,
+                                               recycle: recycleTypeTransport
+                                           }),
         /** @type {Array.<Object|null>} */
         list = [],
         that = this;
 
         function garbageCollect() {
             list = list.filter(function (el) {
-                return el;
+                if (el.data === null) {
+                    transportPool.put(el);
+                    return false;
+                }
+                return true;
             });
         }
 
@@ -71,36 +118,47 @@ angular.module('JSVida-List', [
                 return that;
             }
             list.forEach(function (el, i) {
-                if (el === null) {
+                if (el.data === null) {
                     return;
                 }
-                callback.call(that, el, i);
+                callback.call(that, el.data);
             });
             return that;
         }
 
         /**
-         * @param offset {number}
-         * @returns {boolean}
+         * @returns {function(...)}
          */
-        function deleteEl(offset) {
-            if ((offset >= list.length) || (offset < 0)) {
-                return false;
+
+        function push() {
+            var args = Array.prototype.slice.call(arguments, 0),
+                container = transportPool.get(that.pool.get.apply(that.pool,
+                                                                  args)),
+                isDeleted = false;
+
+            container.data._delete = doDelete;
+
+            list.push(container);
+
+            /**
+             * Deletes the node
+             */
+            function doDelete() {
+                if (isDeleted) {
+                    $log.warn('VidaList: delete called twice on element');
+                    return;
+                }
+                isDeleted = true;
+                that.pool.put(container.data);
+                container.data = null;
             }
-            pool.put(list[offset]);
-            list[offset] = null;
-            return true;
+
+            return doDelete;
         }
 
         /**
-         * @param val {Object}
+         * @returns {Number}
          */
-        function push(val) {
-            if ((val) && (typeof val === 'object')) {
-                list.push(val);
-            }
-        }
-
         function size() {
             return list.length;
         }
@@ -109,11 +167,10 @@ angular.module('JSVida-List', [
         this.gc = garbageCollect;
         this.walk = walk;
         this.size = size;
-        this.newEl = pool.get;
-        this.delete = deleteEl;
         this.push = push;
-        this.trash = pool.put;
     }
+
+    TypedList.prototype.validateConfig = validateConfig;
 
     return TypedList;
 }]);

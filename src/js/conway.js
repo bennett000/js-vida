@@ -39,6 +39,8 @@ angular.module('JSVida-Conway', [
     /** @const */
     maxTickInterval = 5000,
     /** @const */
+    tickTimerMod = 100,
+    /** @const */
     minPop = 1,
     /** @const */
     maxPop = 8,
@@ -71,6 +73,18 @@ angular.module('JSVida-Conway', [
         x = +x || 0;
         y = +y || 0;
         return {x: x, y: y};
+    }
+
+    /**
+     * @params obj {Object}
+     * @params x {number=}
+     * @params y {number=}
+     * @returns {{x: number, y: number}}
+     */
+    function recyclePoint(obj, x, y) {
+        obj.x = +x || 0;
+        obj.y = +y || 0;
+        return obj;
     }
 
     /**
@@ -146,13 +160,11 @@ angular.module('JSVida-Conway', [
             // change any of the changers
             if (cell !== change) {
                 changes.push(function () {
-                    console.log('do', x, y, cell, change);
                     that.map.set(x, y, change);
                 });
                 that.triggerSync('update', x, y, isAlive);
             }
         });
-
     }
 
     /**
@@ -164,7 +176,7 @@ angular.module('JSVida-Conway', [
     function processCell(x, y, offsetTemp) {
         /*jshint validthis:true */
         /** @type {number} */
-        var neighbours = liveNeighbours.call(this, x, y, offsetTemp),
+        var neighbours = this.liveNeighbours(x, y, offsetTemp),
         cell = this.map.get(x, y);
         // alive cases
         if (cell === 1) {
@@ -204,7 +216,7 @@ angular.module('JSVida-Conway', [
             that.triggerSync('update', x, y, true);
             changes.push(function () {
                 that.map.set(x, y, 1);
-                that.livingList.push(that.livingList.newEl(x, y));
+                that.livingList.push(x, y);
             });
         }
     }
@@ -216,14 +228,16 @@ angular.module('JSVida-Conway', [
         /*jshint validthis:true */
         var i, j, that = this, scanKey,
             scanned = {},
-            originTemp = this.livingList.newEl(),
             neighbourTemp;
 
-        this.livingList.walk(function (cell, position) {
-            var x = cell.x, y = cell.y;
+        this.livingList.walk(function (cell) {
+            var x = cell.x, y = cell.y,
+                originTemp = that.livingList.pool.get(),
+                /** @type {function(...)} */
+                kill;
 
             if (that.map.get(x, y) !== 1) {
-                console.log('what', x, y, position);
+                console.log('what', x, y);
             }
             // process main cell, which must be alive, but it can die
             if (!that.processCell(x, y, originTemp)) {
@@ -231,7 +245,7 @@ angular.module('JSVida-Conway', [
                 that.triggerSync('update', x, y, false);
                 changes.push(function () {
                     that.map.set(x, y, 0);
-                    that.livingList.delete(position);
+                    cell._delete();
                 });
             }
 
@@ -243,28 +257,27 @@ angular.module('JSVida-Conway', [
                         continue;
                     }
                     // get from pool
-                    neighbourTemp = that.livingList.newEl();
+                    neighbourTemp = that.livingList.pool.get();
                     // process a neighbour
                     that.map.getNeighbour(x, y, i, j, neighbourTemp);
                     // skip living, as they will be processed in turn
                     if (that.map.get(neighbourTemp.x, neighbourTemp.y) === 1) {
-                        return;
+                        continue;
                     }
                     scanKey = neighbourTemp.x + '.' + neighbourTemp.y;
                     // skip scanned
                     if (scanned[scanKey]) {
-                        return;
+                        continue;
                     }
                     that.lifeScanNeighbour(changes, neighbourTemp.x,
                                            neighbourTemp.y, neighbourTemp);
                     scanned[scanKey] = true;
                     // put back in pool
-                    that.livingList.trash(neighbourTemp);
+                    that.livingList.pool.put(neighbourTemp);
                 }
             }
+            that.livingList.pool.put(originTemp);
         });
-
-        that.livingList.trash(originTemp);
     }
 
     /**
@@ -331,11 +344,18 @@ angular.module('JSVida-Conway', [
             /** @type {boolean} */
             doStop = false,
             /** @type {boolean} */
-            isRunning = false;
+            isRunning = false,
+            /** @type {number} */
+            tickCounter = 0,
+            /** @type {number} */
+            tickTime = 0;
 
 
         function onTick() {
-            var changes = [];
+            var changes = [],
+                /** @type {number} */
+                start = +Date.now();
+
             if (doStop) {
                 doStop = false;
                 isRunning = false;
@@ -349,6 +369,16 @@ angular.module('JSVida-Conway', [
             });
 
             that.livingList.gc();
+            tickCounter += 1;
+            tickTime += +Date.now() - start;
+            if (tickCounter % tickTimerMod === 0) {
+                console.debug('livingList size: ', that.livingList.size());
+                console.info('tickTime avg over ' +
+                             tickTimerMod + ' ' +
+                             Math.floor((tickTime / tickCounter)) + 'ms');
+                tickCounter = 0;
+                tickTime = 0;
+            }
             $timeout(onTick, that.config.tickInterval);
         }
 
@@ -367,17 +397,19 @@ angular.module('JSVida-Conway', [
 
         function init() {
             /** @type {Array.<{ x: number, y: number}>} */
-            that.livingList =  new TypedList({factory: newPoint});
+            that.livingList = new TypedList({
+                                                factory: newPoint,
+                                                recycle: recyclePoint
+                                            });
             // Initialize Buffers
             that.map = new Map2d(that.config).walk(function zero(cell, x, y) {
                 /*jshint validthis: true */
                 if (cell) {
-                    that.livingList.push(that.livingList.newEl(x, y));
+                    that.livingList.push(x, y);
                     this.set(x, y, 1);
                 } else {
                     this.set(x, y, 0);
                 }
-
             });
             that.map.config.wrapMode = 'sphere';
         }

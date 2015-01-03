@@ -21,36 +21,37 @@
  along with Vida.  If not, see <http://www.gnu.org/licenses/>.
  */
 /*global angular*/
-angular.module('JSVida-ObjectPool', [
-]).factory('ObjectPool', [function () {
+angular.module('JSVida-ObjectPool', []).factory('ObjectPool', [function () {
     'use strict';
 
     /** @const */
     var defaultMax = 1000;
 
     /**
-     * @param conf {{ max: number=, factory: function(...), validate: function(...)= }}
-     * @returns {{max: number, factory: function(...), validate: function(...) }}
+     * @param conf {{ max: number=, factory: function(...), recycle: function(...) }}
+     * @throws without conf.recycle or conf.factory
+     * @returns {{max: number, factory: function(...), recycle: function(...) }}
      */
     function validateConfig(conf) {
-        /*jshint validthis:true */
         conf = conf || {};
 
         conf.max = +conf.max || defaultMax;
-        conf.factory = angular.isFunction(conf.factory) ?
-                       conf.factory : angular.noop;
-        conf.validate = angular.isFunction(conf.validate) ?
-                       conf.validate : function (el) { return el; };
+        if (!angular.isFunction(conf.factory)) {
+            throw new TypeError('ObjectPool: requires factory function');
+        }
+        if (!angular.isFunction(conf.recycle)) {
+            throw new TypeError('ObjectPool: requires recycle function');
+        }
 
         return {
-            max : conf.max,
-            factory : conf.factory,
-            validate: conf.validate
+            max: conf.max,
+            factory: conf.factory,
+            recycle: conf.recycle
         };
     }
 
     /**
-     * @param conf {{ max: number=, factory: function(...), validate: function(...)= }}
+     * @param conf {{ max: number=, factory: function(...), recycle: function(...) }}
      * @returns {ObjectPool}
      * @constructor
      */
@@ -71,7 +72,8 @@ angular.module('JSVida-ObjectPool', [
         function get() {
             var args = Array.prototype.slice.call(arguments, 0);
             if (pool.length) {
-                return pool.pop();
+                return conf.recycle.apply(null,
+                                                  [pool.pop()].concat(args));
             }
             return conf.factory.apply(null, args);
         }
@@ -80,8 +82,7 @@ angular.module('JSVida-ObjectPool', [
          * @param val {*}
          */
         function put(val) {
-            val = that.config.validate(val);
-            if (val === undefined) {
+            if ((!val) || typeof val !== 'object') {
                 return;
             }
             pool.push(val);

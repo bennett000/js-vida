@@ -157,7 +157,7 @@ angular.module('JSVida', [
 }]).factory('planetConway', ['textureSphere', 'three', 'between', 'Conway', 'Bitmap', function (textureSphere, three, between, Conway, Bitmap) {
     'use strict';
 
-    var res = 64,
+    var res = 128,
         map = new Bitmap({
                              x: res,
                              y: res,
@@ -249,11 +249,11 @@ angular.module('JSVida', [
 
     return getPlanet;
 }])
-//.run(['scene', 'planetConway', 'universe', function (scene, planetConway, universe) {
-//    'use strict';
-//
-//    scene.scene.add(planetConway());
-//}])
+.run(['scene', 'planetConway', 'universe', function (scene, planetConway, universe) {
+    'use strict';
+
+    scene.scene.add(planetConway());
+}])
 //.run(['universe', 'procomyte', function (universe, procomyte) {
 //    'use strict';
 //

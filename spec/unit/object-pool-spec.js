@@ -25,54 +25,99 @@ describe('ObjectPool', function () {
         module('JSVida-ObjectPool');
     });
 
+    var validConfig = {
+        factory: function (val) {
+            return {
+                val: val
+            };
+        },
+        recycle: function (obj, val) {
+            obj.val = val;
+            return obj;
+        }
+    };
+
+    it('should throw without a factory', inject(function (ObjectPool) {
+        expect(function fail() {
+            var c = new ObjectPool({recycle: function () {}});
+        }).toThrow();
+    }));
+
+    it('should throw without a recycle', inject(function (ObjectPool) {
+        expect(function fail() {
+            var c = new ObjectPool({factory: function () {}});
+        }).toThrow();
+    }));
+
     it('should be a constructor', inject(function (ObjectPool) {
-        expect(ObjectPool() instanceof ObjectPool).toBe(true);
-        expect(new ObjectPool() instanceof ObjectPool).toBe(true);
+        expect(ObjectPool(validConfig) instanceof ObjectPool).toBe(true);
+        expect(new ObjectPool(validConfig) instanceof ObjectPool).toBe(true);
     }));
 
     it('should start with size 0', inject(function (ObjectPool) {
-        var o = new ObjectPool();
+        var o = new ObjectPool(validConfig);
         expect(o.size()).toBe(0);
     }));
 
     it('initially, get should return the result of the given factory',
        inject(function (ObjectPool) {
-           var o = new ObjectPool({factory: function (el) { return el; }});
+           var o = new ObjectPool({
+                                      factory: function (el) { return el; },
+                                      recycle: validConfig.recycle
+                                  });
            expect(o.get(57)).toBe(57);
        }));
 
     it('put should add an object to the pool', inject(function (ObjectPool) {
-        var o = new ObjectPool({factory: function (el) { return el; }}),
-            test = { x: 5, y: 43 };
+        var o = new ObjectPool({
+                                   factory: function (el) { return el; },
+                                   recycle: validConfig.recycle
+                               }),
+            test = {x: 5, y: 43};
         o.put(test);
         expect(o.size()).toBe(1);
     }));
 
     it('put should skip undefined', inject(function (ObjectPool) {
-        var o = new ObjectPool({factory: function (el) { return el; }});
+        var o = new ObjectPool({
+                                   factory: function (el) { return el; },
+                                   recycle: validConfig.recycle
+                               });
         o.put();
         expect(o.size()).toBe(0);
     }));
 
     it('put should trigger GC', inject(function (ObjectPool) {
-        var o = new ObjectPool({factory: function (el) { return el; }, max: 3});
-        o.put(35);
-        o.put(36);
-        o.put(37);
-        o.put(38);
+        var o = new ObjectPool({
+                                   factory: function (el) { return el; },
+                                   recycle: validConfig.recycle,
+                                   max: 3
+                               });
+        o.put({});
+        o.put({});
+        o.put({});
+        expect(o.size()).toBe(3);
+        o.put({});
         expect(o.size()).toBe(0);
     }));
 
     it('put should skip emptying if < 1', inject(function (ObjectPool) {
-        var o = new ObjectPool({factory: function (el) { return el; }, max: -1});
-        o.put(35);
+        var o = new ObjectPool({
+                                   factory: function (el) { return el; },
+                                   recycle: validConfig.recycle,
+                                   max: -1
+                               });
+        o.put({});
         expect(o.size()).toBe(1);
     }));
 
     it('if there are objects in the pool get should return those',
        inject(function (ObjectPool) {
-           var o = new ObjectPool({factory: function (el) { return el; }}),
-               test = { x: 5, y: 43 };
+           var o = new ObjectPool({
+                                      factory: function (el) { return el; },
+                                      recycle: validConfig.recycle
+                                  }),
+               test = {x: 5, y: 43};
            o.put(test);
            expect(o.get()).toBe(test);
        }));
