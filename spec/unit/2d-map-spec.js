@@ -457,3 +457,21 @@ describe('xyToOffset class method - depends on config.x/config.y', function () {
         expect(n.get(1,1)).toBe(6);
     }));
 });
+
+describe('Map2dCell', function () {
+    'use strict';
+
+    beforeEach(function () {
+        module('JSVida-Map2D');
+    });
+
+    it('should be a constructor', inject(function (Map2dCell) {
+        expect(Map2dCell() instanceof Map2dCell).toBe(true);
+        expect(new Map2dCell() instanceof Map2dCell).toBe(true);
+    }));
+
+    it('should have neighbour shortcodes', inject(function (Map2dCell) {
+        var m = new Map2dCell();
+        expect(m.tr).toBe(null);
+    }));
+});

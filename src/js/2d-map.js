@@ -52,7 +52,33 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
     }
 
     return xyToOffset;
-}]).factory('Map2d', ['xyToOffset', function (xyToOffset) {
+}]).factory('Map2dCell', [function () {
+    'use strict';
+
+    function Map2dCell(x, y, data, tl, t, tr, l, r, bl, b, br) {
+        if (!(this instanceof Map2dCell)) {
+            return new Map2dCell(x, y, data, tl, t, tr, l, r, bl, b, br);
+        }
+
+        this.x = +x || 0;
+        this.y = +y || 0;
+
+        this.data = data;
+
+        this.tl = tl || null;
+        this.t = t || null;
+        this.tr = tr || null;
+
+        this.bl = bl || null;
+        this.b = b || null;
+        this.br = br || null;
+
+        this.l = l || null;
+        this.r = r || null;
+    }
+
+    return Map2dCell;
+}]).factory('Map2d', ['xyToOffset', 'Map2dCell', function (xyToOffset, Map2dCell) {
     'use strict';
     /** @const */
     var defaultWidth = 128,
@@ -103,7 +129,7 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
         for (i = 0; i < this.config.x; i += 1) {
             this.map[i] = [];
             for (j = 0; j < this.config.y; j += 1) {
-                this.map[i].push(null);
+                this.map[i].push(new Map2dCell(i, j, null));
             }
         }
     }
@@ -191,7 +217,7 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
     function getNeighbour(x, y, dx, dy, result) {
         /*jshint validthis:true*/
         if (!result) {
-            result = { x: 0, y: 0 };
+            result = {x: 0, y: 0};
         }
         x = +x;
         y = +y;
@@ -218,6 +244,12 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
         } else {
             return getNeighbourFlat.call(this, x, y, dx, dy, result);
         }
+    }
+
+    function getNeighbourEl(x, y, dx, dy, tempObj) {
+        /*jshint validthis:true */
+        this.getNeighbour(x, y, dx, dy, tempObj);
+        return this.map[tempObj.x][tempObj.y];
     }
 
     function reset() {
@@ -250,7 +282,7 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
     /**
      * Checks this for a given configuration/seed if not return array
      * @param array2d {Array.<Array>}
-     * @returns {Array.<Array>}
+     * @returns {Array.<Array.<Map2dCell>>}
      */
     function validateLoadData(array2d) {
         /*jshint validthis:true */
@@ -259,16 +291,18 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
 
         /**
          * @param col {*}
-         * @returns {Array}
+         * @returns {Array.<Map2dCell>}
          */
-        function checkCols(col) {
+        function checkCols(col, i) {
             if (!Array.isArray(col)) {
                 return [];
             }
             if (col.length > that.config.y) {
                 return [];
             }
-            return col;
+            return col.map(function (data, j) {
+                return new Map2dCell(i, j, data);
+            });
         }
 
         if (!Array.isArray(array2d)) {
@@ -279,6 +313,26 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
         }
 
         return array2d.map(checkCols);
+    }
+
+    function assignNeighbours() {
+        /*jshint validthis:true */
+
+        var i, j, point = {x: 0, y: 0};
+        for (i = 0; i < this.config.x; i += 1) {
+            for (j = 0; j < this.config.y; j += 1) {
+                this.map[i][j].tl = this.getNeighbourEl(i, j, -1, 1, point);
+                this.map[i][j].t = this.getNeighbourEl(i, j, 0, 1, point);
+                this.map[i][j].tr = this.getNeighbourEl(i, j, 1, 1, point);
+
+                this.map[i][j].bl = this.getNeighbourEl(i, j, -1, -1, point);
+                this.map[i][j].b = this.getNeighbourEl(i, j, 0, -1, point);
+                this.map[i][j].br = this.getNeighbourEl(i, j, 1, -1, point);
+
+                this.map[i][j].l = this.getNeighbourEl(i, j, -1, 0, point);
+                this.map[i][j].r = this.getNeighbourEl(i, j, 1, 0, point);
+            }
+        }
     }
 
     /**
@@ -294,13 +348,14 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
             if (this.map.length <= i) {
                 this.map[i] = [];
             }
-            for (j = 0; j < this.config.y; j+= 1) {
+            for (j = 0; j < this.config.y; j += 1) {
                 // fill out short y's
                 if (this.map[i].length <= j) {
-                    this.map[i][j] = null;
+                    this.map[i][j] = new Map2dCell(i, j, null);
                 }
             }
         }
+        this.assignNeighbours();
     }
 
     /**
@@ -314,7 +369,7 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
         if (!checkXY.call(this, x, y)) {
             return false;
         }
-        this.map[x][y] = val;
+        this.map[x][y].data = val;
         return true;
     }
 
@@ -328,7 +383,7 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
         if (!checkXY.call(this, x, y)) {
             return;
         }
-        return this.map[x][y];
+        return this.map[x][y].data;
     }
 
     /**
@@ -360,7 +415,7 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
         var i, j;
         for (i = 0; i < this.config.x; i += 1) {
             for (j = 0; j < this.config.y; j += 1) {
-                callback.call(this, this.map[i][j], i, j);
+                callback.call(this, this.map[i][j].data, i, j, this.map[i][j]);
             }
         }
         return this;
@@ -404,7 +459,9 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
     Map2d.prototype.reset = reset;
     Map2d.prototype.clone = clone;
     Map2d.prototype.getNeighbour = getNeighbour;
+    Map2d.prototype.getNeighbourEl = getNeighbourEl;
     Map2d.prototype.validateLoadData = validateLoadData;
+    Map2d.prototype.assignNeighbours = assignNeighbours;
 
     return Map2d;
 }]);
