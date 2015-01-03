@@ -437,6 +437,7 @@ angular.module('JSVida-List', [
     LinkedList.prototype.unshift = unshift;
     LinkedList.prototype.shift = shift;
     LinkedList.prototype.walk = walk;
+    LinkedList.prototype.forEach = walk;
 
     return LinkedList;
 }]);

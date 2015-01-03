@@ -265,27 +265,9 @@ angular.module('JSVida-Conway', [
         }
     }
 
-    function lifeScanNeighbours(cell, changes, scanned) {
+    function lifeScanNeighbours(cell, changes) {
         /*jshint validthis:true*/
-        var i, j, neighbourTemp, scanKey;
-
-        if (cell.tl) {
-
-        } else {
-            cell.tl = pool.get();
-        }
-
-        if (cell.t) {
-
-        } else {
-            cell.t = pool.get();
-        }
-
-        if (cell.tr) {
-
-        } else {
-            cell.tr = pool.get();
-        }
+        var i, j, neighbourTemp, x = +cell.x, y = +cell.y;
 
         // process the neighbours
         for (i = -1; i < 2; i += 1) {
@@ -302,14 +284,8 @@ angular.module('JSVida-Conway', [
                 if (this.map.get(neighbourTemp.x, neighbourTemp.y) === 1) {
                     continue;
                 }
-                scanKey = neighbourTemp.x + '.' + neighbourTemp.y;
-                // skip scanned
-                if (scanned[scanKey]) {
-                    continue;
-                }
                 this.lifeScanNeighbour(changes, neighbourTemp.x,
                                        neighbourTemp.y);
-                scanned[scanKey] = true;
                 // put back in pool
                 pool.put(neighbourTemp);
             }
@@ -321,12 +297,11 @@ angular.module('JSVida-Conway', [
      */
     function lifeScan(changes) {
         /*jshint validthis:true */
-        var that = this,
-            scanned = {};
+        var that = this;
 
         this.livingList.walk(function lifeScanWalk(cell, deleteFn) {
             lifeScanMainCell.call(that, cell, changes, deleteFn);
-            lifeScanNeighbours.call(that, cell, changes, scanned);
+            lifeScanNeighbours.call(that, cell, changes);
         });
     }
 

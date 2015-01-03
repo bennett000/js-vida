@@ -365,22 +365,23 @@ for (i = 0; i < size; i += 1) {
     l.push(seed);
 }
 
-function flTest(list) {
-
-}
-
 function test(list) {
+    'use strict';
+
     var start = +Date.now();
     list.forEach(function (el) {
-        val = Date.now().toString(16) + Math.random();
+        //val = Date.now().toString(16) + Math.random();
+        el += 2;
     });
     return +Date.now() - start;
 }
 
 function flTest() {
-    var start = +Date.now(), i = 0;
+    'use strict';
+
+    var start = +Date.now(), i;
     for (i = 0; i < size; i += 1) {
-        val = Date.now().toString(16) + Math.random();
+        a[i] += 2;
     }
     return +Date.now() - start;
 }
