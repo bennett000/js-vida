@@ -26,6 +26,9 @@ angular.module('JSVida-List', [
 ]).factory('TypedList', ['ObjectPool', '$log', function (ObjectPool, $log) {
     'use strict';
 
+    /** @const */
+    var garbageLimit = 128;
+
     /**
      * @param data {*=}
      * @returns {{data: (*|null)}}
@@ -72,7 +75,8 @@ angular.module('JSVida-List', [
         return {
             max: conf.max,
             factory: conf.factory,
-            pool: conf.pool
+            pool: conf.pool,
+            garbageLimit: conf.garbageLimit || garbageLimit
         };
     }
 
@@ -97,9 +101,14 @@ angular.module('JSVida-List', [
                                            }),
         /** @type {Array.<Object|null>} */
         list = [],
+        /** @type {Array.<Object|null>} */
+        garbage = 0,
         that = this;
 
         function garbageCollect() {
+            if (garbage < that.config.garbageLimit) {
+                return;
+            }
             list = list.filter(function (el) {
                 if (el.data === null) {
                     transportPool.put(el);
@@ -117,7 +126,7 @@ angular.module('JSVida-List', [
             if (!angular.isFunction(callback)) {
                 return that;
             }
-            list.forEach(function (el, i) {
+            list.forEach(function typedListWalker(el) {
                 if (el.data === null) {
                     return;
                 }
@@ -151,6 +160,7 @@ angular.module('JSVida-List', [
                 isDeleted = true;
                 that.pool.put(container.data);
                 container.data = null;
+                garbage += 1;
             }
 
             return doDelete;
@@ -173,4 +183,260 @@ angular.module('JSVida-List', [
     TypedList.prototype.validateConfig = validateConfig;
 
     return TypedList;
+}]).factory('LinkedList', ['ObjectPool', function (ObjectPool) {
+    'use strict';
+    /** @const */
+    var nodeType = 'vida-node',
+    pool = new ObjectPool({
+                              factory: newNode,
+                              recycle: recycleNode
+                          });
+
+    /**
+     * @param next {{ next: Object, prev: Object, data: * }}=
+     * @param prev {{ next: Object, prev: Object, data: * }}=
+     * @param data {*}=
+     * @param deleteFn {function(...)}
+     * @returns {{next: Object, prev: Object, data: * }}
+     */
+    function newNode(next, prev, data, deleteFn) {
+        return {
+            next: next || null,
+            prev: prev || null,
+            data: data || null,
+            _type: nodeType,
+            _delete: deleteFn
+        };
+    }
+
+    /**
+     * @param obj {Object}
+     * @param next {{ next: Object=, prev: Object=, data: *= }}=
+     * @param prev {{ next: Object=, prev: Object=, data: *= }}=
+     * @param data {*}=
+     * @param deleteFn {function(...)}
+     * @returns {{next: Object, prev: Object, data: * }}
+     */
+    function recycleNode(obj, next, prev, data, deleteFn) {
+        obj.next = next;
+        obj.prev = prev;
+        obj.data = data;
+        obj._delete = deleteFn;
+        return obj;
+    }
+
+    /**
+     * @param conf {{}}=
+     * @returns {{}}
+     */
+    function validateConfig(conf) {
+        conf = conf || {};
+        return {};
+    }
+
+    /**
+     * @param node {Object}
+     * @returns {function(...)}
+     */
+    function getDelete(node) {
+        /*jshint validthis:true */
+        var that = this;
+
+        /**
+         *  Delete a node
+         */
+        function doDelete() {
+            if (node === that.head) {
+                return that.shift();
+            }
+            if (node === that.tail) {
+                return that.pop();
+            }
+            node.next.prev = node.prev;
+            node.prev.next = node.next;
+            // return node for recycling
+            pool.put(node);
+            return node.data;
+        }
+
+        return doDelete;
+    }
+
+    /**
+     * @param val {Object}
+     */
+    function push(val) {
+        /*jshint validthis:true */
+        if (!val) {
+            return;
+        }
+
+        if (this.length === 0) {
+            this.head.data = val;
+            this.length += 1;
+            return;
+        } else if (this.length === 1) {
+            this.tail.data = val;
+            this.length += 1;
+            return;
+        }
+
+        var n = pool.get();
+        n.prev = this.tail;
+        n.next = null;
+        n.data = val;
+        n._delete = getDelete.call(this, n);
+        this.tail.next = n;
+        this.tail = n;
+
+        this.length += 1;
+    }
+
+    /**
+     * @param val {Object}
+     */
+    function unshift(val) {
+        /*jshint validthis:true */
+        if (!val) {
+            return;
+        }
+
+        if (this.length === 0) {
+            this.head.data = val;
+            this.length += 1;
+            return;
+        } else if (this.length === 1) {
+            this.tail.data = this.head.data;
+            this.head.data = val;
+            this.length += 1;
+            return;
+        }
+
+        var n = pool.get();
+        n.next = this.head;
+        n.prev = null;
+        n.data = val;
+        n._delete = getDelete.call(this, n);
+        this.head.prev = n;
+        this.head = n;
+        this.length += 1;
+    }
+
+    /**
+     * @returns {*}
+     */
+    function pop() {
+        var result;
+        /*jshint validthis:true */
+        if (this.length === 0) {
+            return null;
+        } else if (this.length === 1) {
+            result = this.head.data;
+            this.head.data = null;
+            this.length -= 1;
+            return result;
+        } else if (this.length === 2) {
+            result = this.tail.data;
+            this.tail.data = null;
+            this.length -= 1;
+            return result;
+        }
+        // list is longer'
+        result = this.tail.data;
+        pool.put(this.tail);
+        this.tail = this.tail.prev;
+        this.tail.next = null;
+        this.length -= 1;
+        return result;
+    }
+
+    /**
+     * @returns {*}
+     */
+    function shift() {
+        /*jshint validthis:true */
+        var result;
+        // List is almost empty
+        if (this.length === 0) {
+            return null;
+        } else if (this.length === 1) {
+            result = this.head.data;
+            this.head.data = null;
+            this.length -= 1;
+            return result;
+        } else if (this.length === 2) {
+            result = this.head.data;
+            this.head.data = this.tail.data;
+            this.tail.data = null;
+            this.length -= 1;
+            return result;
+        }
+
+        // list is more populated
+        result = this.head.data;
+        pool.put(this.head);
+        this.head = this.head.next;
+        this.head.prev = null;
+        this.length -= 1;
+        return result;
+    }
+
+    /**
+     * @param callback {function(*, function)}
+     * @param direction {string} 'reverse' forces iterator to start at tail
+     * @returns {walk}
+     */
+    function walk(callback, direction) {
+        /*jshint validthis:true */
+        if (!angular.isFunction(callback)) {
+            return this;
+        }
+        var obj;
+        if (direction === 'reverse') {
+            direction = 'prev';
+            obj = this.tail;
+        } else {
+            direction = 'next';
+            obj = this.head;
+        }
+        if (this.head.data) {
+            callback.call(null, obj.data, obj._delete);
+        }
+        while (obj[direction] !== null) {
+            if (obj[direction].data) {
+                callback.call(null, obj[direction].data,
+                              obj[direction]._delete);
+            }
+            obj = obj[direction];
+        }
+        return this;
+    }
+
+    /**
+     * @param conf {{}}=
+     * @returns {LinkedList}
+     * @constructor
+     */
+    function LinkedList(conf) {
+        if (!(this instanceof LinkedList)) {
+            return new LinkedList(conf);
+        }
+
+        this.length = 0;
+        this.config = validateConfig(conf);
+        this.head = pool.get(null, null, null, angular.noop);
+        this.tail = pool.get(null, null, null, angular.noop);
+        this.head.next = this.tail;
+        this.tail.prev = this.head;
+        this.head.delete = getDelete.call(this, this.head);
+        this.tail.delete = getDelete.call(this, this.tail);
+    }
+
+    LinkedList.prototype.push = push;
+    LinkedList.prototype.pop = pop;
+    LinkedList.prototype.unshift = unshift;
+    LinkedList.prototype.shift = shift;
+    LinkedList.prototype.walk = walk;
+
+    return LinkedList;
 }]);

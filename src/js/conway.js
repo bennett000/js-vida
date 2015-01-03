@@ -24,8 +24,9 @@
 angular.module('JSVida-Conway', [
     'JSVida',
     'JSVida-Map2D',
-    'JSVida-List'
-]).factory('Conway', ['$timeout', 'makeListener', 'Map2d', 'TypedList', function ($timeout, makeListener, Map2d, TypedList) {
+    'JSVida-List',
+    'JSVida-ObjectPool'
+]).factory('Conway', ['$timeout', 'makeListener', 'Map2d', 'ObjectPool', 'LinkedList', function ($timeout, makeListener, Map2d, ObjectPool, LinkedList) {
     'use strict';
 
     /** @const */
@@ -47,7 +48,12 @@ angular.module('JSVida-Conway', [
     /** @const */
     defaultWidth = 128,
     /** @const */
-    defaultHeight = 128;
+    defaultHeight = 128,
+    /** @type ObjectPool */
+    pool = new ObjectPool({
+                              factory: newPoint,
+                              recycle: recyclePoint
+                          });
 
 
     /**
@@ -55,13 +61,16 @@ angular.module('JSVida-Conway', [
      * @param y {number}
      * @param dx {number}
      * @param dy {number}
-     * @param offsetTemp {{ x: number, y: number }}
      * @returns {*}
      */
-    function getNeighbourValue(x, y, dx, dy, offsetTemp) {
+    function getNeighbourValue(x, y, dx, dy) {
         /*jshint validthis:true*/
+        var offsetTemp = pool.get(), nx, ny;
         this.map.getNeighbour(x, y, dx, dy, offsetTemp);
-        return this.map.get(offsetTemp.x, offsetTemp.y);
+        nx = offsetTemp.x;
+        ny = offsetTemp.y;
+        pool.put(offsetTemp);
+        return this.map.get(nx, ny);
     }
 
     /**
@@ -72,7 +81,18 @@ angular.module('JSVida-Conway', [
     function newPoint(x, y) {
         x = +x || 0;
         y = +y || 0;
-        return {x: x, y: y};
+        return {
+            x: x,
+            y: y,
+            tl: null,
+            t: null,
+            tr: null,
+            l: null,
+            r: null,
+            bl: null,
+            b: null,
+            br: null
+        };
     }
 
     /**
@@ -84,21 +104,27 @@ angular.module('JSVida-Conway', [
     function recyclePoint(obj, x, y) {
         obj.x = +x || 0;
         obj.y = +y || 0;
+        obj.tl = null;
+        obj.t = null;
+        obj.tr = null;
+        obj.l = null;
+        obj.r = null;
+        obj.bl = null;
+        obj.b = null;
+        obj.br = null;
         return obj;
     }
 
     /**
      * @param x {number}
      * @param y {number}
-     * @param offsetTemp {{ x: number, y: number }}=
      * @returns {number}
      */
-    function liveNeighbours(x, y, offsetTemp) {
+    function liveNeighbours(x, y) {
         /*jshint validthis:true */
         /** @type {number} */
-        var count = 0;
-
-        offsetTemp = offsetTemp || {x: 0, y: 0};
+        var count = 0,
+        offsetTemp = pool.get();
 
         // top left
         if (this.getNeighbourValue(x, y, -1, 1, offsetTemp)) {
@@ -140,6 +166,7 @@ angular.module('JSVida-Conway', [
             count += 1;
         }
 
+        pool.put(offsetTemp);
         return count;
     }
 
@@ -170,13 +197,12 @@ angular.module('JSVida-Conway', [
     /**
      * @param x {number}
      * @param y {number}
-     * @param offsetTemp {{ x: number, y: number }}=
      * @returns {number}
      */
-    function processCell(x, y, offsetTemp) {
+    function processCell(x, y) {
         /*jshint validthis:true */
         /** @type {number} */
-        var neighbours = this.liveNeighbours(x, y, offsetTemp),
+        var neighbours = this.liveNeighbours(x, y),
         cell = this.map.get(x, y);
         // alive cases
         if (cell === 1) {
@@ -202,22 +228,91 @@ angular.module('JSVida-Conway', [
     }
 
     /**
+     * @param cell {Object}
+     * @param changes {Array.<function>}
+     * @param deleteFn {function(...)}
+     */
+    function lifeScanMainCell(cell, changes, deleteFn) {
+        /*jshint validthis:true */
+        // process main cell, which must be alive, but it can die
+        var that = this, x = +cell.x, y = +cell.y;
+        if (!this.processCell(x, y)) {
+            // trigger
+            this.triggerSync('update', x, y, false);
+            changes.push(function deathOrigin() {
+                that.map.set(x, y, 0);
+                pool.put(deleteFn());
+            });
+        }
+    }
+
+    /**
      * @param changes {Array.<function(...)>}
      * @param x {number}
      * @param y {number}
-     * @param offsetTemp {{ x: number, y: number}}=
      */
-    function lifeScanNeighbour(changes, x, y, offsetTemp) {
+    function lifeScanNeighbour(changes, x, y) {
         /*jshint validthis:true*/
         var that = this,
-            change = this.processCell(x, y, offsetTemp);
+            change = this.processCell(x, y);
         // register births
         if (change === 1) {
             that.triggerSync('update', x, y, true);
-            changes.push(function () {
+            changes.push(function lifeScanBirth() {
                 that.map.set(x, y, 1);
-                that.livingList.push(x, y);
+                that.livingList.push(pool.get(x, y));
             });
+        }
+    }
+
+    function lifeScanNeighbours(cell, changes, scanned) {
+        /*jshint validthis:true*/
+        var i, j, neighbourTemp, scanKey;
+
+        if (cell.tl) {
+
+        } else {
+            cell.tl = pool.get();
+        }
+
+        if (cell.t) {
+
+        } else {
+            cell.t = pool.get();
+        }
+
+        if (cell.tr) {
+
+        } else {
+            cell.tr = pool.get();
+        }
+
+        // process the neighbours
+        for (i = -1; i < 2; i += 1) {
+            for (j = -1; j < 2; j += 1) {
+                // skip origin
+                if ((i === 0) && (j === 0)) {
+                    continue;
+                }
+                // get from pool
+                neighbourTemp = pool.get();
+                // process a neighbour
+                this.map.getNeighbour(x, y, i, j, neighbourTemp);
+                // skip living, as they will be processed in turn
+                if (this.map.get(neighbourTemp.x, neighbourTemp.y) === 1) {
+                    continue;
+                }
+                scanKey = neighbourTemp.x + '.' + neighbourTemp.y;
+                // skip scanned
+                if (scanned[scanKey]) {
+                    continue;
+                }
+                this.lifeScanNeighbour(changes, neighbourTemp.x,
+                                       neighbourTemp.y);
+                scanned[scanKey] = true;
+                // put back in pool
+                pool.put(neighbourTemp);
+            }
         }
     }
 
@@ -226,57 +321,12 @@ angular.module('JSVida-Conway', [
      */
     function lifeScan(changes) {
         /*jshint validthis:true */
-        var i, j, that = this, scanKey,
-            scanned = {},
-            neighbourTemp;
+        var that = this,
+            scanned = {};
 
-        this.livingList.walk(function (cell) {
-            var x = cell.x, y = cell.y,
-                originTemp = that.livingList.pool.get(),
-                /** @type {function(...)} */
-                kill;
-
-            if (that.map.get(x, y) !== 1) {
-                console.log('what', x, y);
-            }
-            // process main cell, which must be alive, but it can die
-            if (!that.processCell(x, y, originTemp)) {
-                // trigger
-                that.triggerSync('update', x, y, false);
-                changes.push(function () {
-                    that.map.set(x, y, 0);
-                    cell._delete();
-                });
-            }
-
-            // process the neighbours
-            for (i = -1; i < 2; i += 1) {
-                for (j = -1; j < 2; j += 1) {
-                    // skip origin
-                    if ((i === 0) && (j === 0)) {
-                        continue;
-                    }
-                    // get from pool
-                    neighbourTemp = that.livingList.pool.get();
-                    // process a neighbour
-                    that.map.getNeighbour(x, y, i, j, neighbourTemp);
-                    // skip living, as they will be processed in turn
-                    if (that.map.get(neighbourTemp.x, neighbourTemp.y) === 1) {
-                        continue;
-                    }
-                    scanKey = neighbourTemp.x + '.' + neighbourTemp.y;
-                    // skip scanned
-                    if (scanned[scanKey]) {
-                        continue;
-                    }
-                    that.lifeScanNeighbour(changes, neighbourTemp.x,
-                                           neighbourTemp.y, neighbourTemp);
-                    scanned[scanKey] = true;
-                    // put back in pool
-                    that.livingList.pool.put(neighbourTemp);
-                }
-            }
-            that.livingList.pool.put(originTemp);
+        this.livingList.walk(function lifeScanWalk(cell, deleteFn) {
+            lifeScanMainCell.call(that, cell, changes, deleteFn);
+            lifeScanNeighbours.call(that, cell, changes, scanned);
         });
     }
 
@@ -361,18 +411,16 @@ angular.module('JSVida-Conway', [
                 isRunning = false;
                 return;
             }
-            //brute.call(that, changes);
-            lifeScan.call(that, changes);
+            //that.brute(changes);
+            that.lifeScan(changes);
             that.triggerSync('tick');
             changes.forEach(function (change) {
                 change();
             });
 
-            that.livingList.gc();
             tickCounter += 1;
             tickTime += +Date.now() - start;
             if (tickCounter % tickTimerMod === 0) {
-                console.debug('livingList size: ', that.livingList.size());
                 console.info('tickTime avg over ' +
                              tickTimerMod + ' ' +
                              Math.floor((tickTime / tickCounter)) + 'ms');
@@ -397,15 +445,12 @@ angular.module('JSVida-Conway', [
 
         function init() {
             /** @type {Array.<{ x: number, y: number}>} */
-            that.livingList = new TypedList({
-                                                factory: newPoint,
-                                                recycle: recyclePoint
-                                            });
+            that.livingList = new LinkedList();
             // Initialize Buffers
             that.map = new Map2d(that.config).walk(function zero(cell, x, y) {
                 /*jshint validthis: true */
                 if (cell) {
-                    that.livingList.push(x, y);
+                    that.livingList.push(pool.get(x, y));
                     this.set(x, y, 1);
                 } else {
                     this.set(x, y, 0);
