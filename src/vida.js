@@ -249,11 +249,11 @@ angular.module('JSVida', [
 
     return getPlanet;
 }])
-//.run(['scene', 'planetConway', 'universe', function (scene, planetConway, universe) {
-//    'use strict';
-//
-//    scene.scene.add(planetConway());
-//}])
+.run(['scene', 'planetConway', 'universe', function (scene, planetConway, universe) {
+    'use strict';
+
+    scene.scene.add(planetConway());
+}])
 //.run(['universe', 'procomyte', function (universe, procomyte) {
 //    'use strict';
 //
