@@ -63,16 +63,6 @@ describe('Conway implementation', function () {
         expect(Conway.clamp(0, 0, 5)).toBe(0);
     }));
 
-    it('newPoint should return a simple new point', inject(function (Conway) {
-        expect(Conway.newPoint(0, 0).x).toBe(0);
-        expect(Conway.newPoint(0, 0).y).toBe(0);
-    }));
-
-    it('newPoint should return a new object', inject(function (Conway) {
-        var p1 = Conway.newPoint(), p2 = Conway.newPoint();
-        expect(p1).not.toBe(p2);
-    }));
-
 });
 
 /**

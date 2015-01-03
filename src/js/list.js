@@ -23,206 +23,92 @@
 /*global angular*/
 angular.module('JSVida-List', [
     'JSVida-ObjectPool'
-]).factory('TypedList', ['ObjectPool', '$log', function (ObjectPool, $log) {
+]).factory('LinkedListNode', [function () {
     'use strict';
 
-    /** @const */
-    var garbageLimit = 128;
-
-    /**
-     * @param data {*=}
-     * @returns {{data: (*|null)}}
-     */
-    function newTypeTransport(data) {
-        return {
-            data: data || null
-        };
-    }
-
-    /**
-     * @param obj {Object}
-     * @param data {*=}
-     * @returns {{data: (*|null)}}
-     */
-    function recycleTypeTransport(obj, data) {
-        obj.data = data;
-        return obj;
-    }
-
-    /**
-     * @param conf {{ factory: function(...), max: number=, pool: ObjectPool= }}
-     * @throws if factory is not a function
-     * @returns {{max: number=, factory: function(...), pool: ObjectPool }}
-     */
-    function validateConfig(conf) {
+    function wrapDelete(deleteFn) {
         /*jshint validthis:true */
-        conf = conf || {};
+        if (!angular.isFunction(deleteFn)) {
+            deleteFn = angular.noop;
+        }
+        var that = this;
 
-        if (!angular.isFunction(conf.factory)) {
-            throw new TypeError('TypedList requires a factory function');
+        function doDelete() {
+            var result = deleteFn.apply(null,
+                                  Array.prototype.slice.call(arguments, 0));
+            that._isDeleted = true;
+            that.prev = null;
+            that.next = null;
+            that.data = null;
+            return result;
         }
 
-        if (!angular.isFunction(conf.recycle)) {
-            throw new TypeError('TypedList requires a recycle function');
-        }
+        this._delete = doDelete;
 
-        conf.pool = conf.pool || new ObjectPool({
-                                                    factory: conf.factory,
-                                                    recycle: conf.recycle,
-                                                    max: conf.max
-                                                });
-
-        return {
-            max: conf.max,
-            factory: conf.factory,
-            pool: conf.pool,
-            garbageLimit: conf.garbageLimit || garbageLimit
-        };
+        return doDelete;
     }
 
+    function recycle(next, prev, data, deleteFn) {
+        /*jshint validthis:true */
+        this.next = next || null;
+        this.prev = prev || null;
+        this.data = data;
+        this._delete = this.wrapDelete(deleteFn);
+        this._isDeleted = false;
+
+        return this;
+    }
 
     /**
-     * @param conf {{ factory: function(...), max: number=, pool: ObjectPool= }}
-     * @returns {TypedList}
+     * @param next {LinkedListNode}
+     * @param prev {LinkedListNode}
+     * @param data {*}
+     * @param deleteFn {function(...)}
+     * @returns {LinkedListNode}
      * @constructor
      */
-    function TypedList(conf) {
-        if (!(this instanceof TypedList)) {
-            return new TypedList(conf);
+    function LinkedListNode(next, prev, data, deleteFn) {
+        if (!(this instanceof LinkedListNode)) {
+            return new LinkedListNode(next, prev, data, deleteFn);
         }
 
-        this.config = this.validateConfig(conf);
-        this.pool = this.config.pool;
-
-        /** @type {ObjectPool} */
-        var transportPool = new ObjectPool({
-                                               factory: newTypeTransport,
-                                               recycle: recycleTypeTransport
-                                           }),
-        /** @type {Array.<Object|null>} */
-        list = [],
-        /** @type {Array.<Object|null>} */
-        garbage = 0,
-        that = this;
-
-        function garbageCollect() {
-            if (garbage < that.config.garbageLimit) {
-                return;
-            }
-            list = list.filter(function (el) {
-                if (el.data === null) {
-                    transportPool.put(el);
-                    return false;
-                }
-                return true;
-            });
-        }
-
-        /**
-         * @param callback {function(...)}
-         * @returns {TypedList}
-         */
-        function walk(callback) {
-            if (!angular.isFunction(callback)) {
-                return that;
-            }
-            list.forEach(function typedListWalker(el) {
-                if (el.data === null) {
-                    return;
-                }
-                callback.call(that, el.data);
-            });
-            return that;
-        }
-
-        /**
-         * @returns {function(...)}
-         */
-
-        function push() {
-            var args = Array.prototype.slice.call(arguments, 0),
-                container = transportPool.get(that.pool.get.apply(that.pool,
-                                                                  args)),
-                isDeleted = false;
-
-            container.data._delete = doDelete;
-
-            list.push(container);
-
-            /**
-             * Deletes the node
-             */
-            function doDelete() {
-                if (isDeleted) {
-                    $log.warn('VidaList: delete called twice on element');
-                    return;
-                }
-                isDeleted = true;
-                that.pool.put(container.data);
-                container.data = null;
-                garbage += 1;
-            }
-
-            return doDelete;
-        }
-
-        /**
-         * @returns {Number}
-         */
-        function size() {
-            return list.length;
-        }
-
-
-        this.gc = garbageCollect;
-        this.walk = walk;
-        this.size = size;
-        this.push = push;
+        this.recycle(next, prev, data, deleteFn);
     }
 
-    TypedList.prototype.validateConfig = validateConfig;
+    LinkedListNode.prototype.recycle = recycle;
+    LinkedListNode.prototype.wrapDelete = wrapDelete;
 
-    return TypedList;
-}]).factory('LinkedList', ['ObjectPool', function (ObjectPool) {
+    return LinkedListNode;
+
+}]).factory('LinkedList', ['ObjectPool', 'LinkedListNode', '$log', function (ObjectPool, LinkedListNode, $log) {
     'use strict';
     /** @const */
-    var nodeType = 'vida-node',
-    pool = new ObjectPool({
-                              factory: newNode,
-                              recycle: recycleNode
-                          });
+    var pool = new ObjectPool({
+                                  factory: newNode,
+                                  recycle: recycleNode
+                              });
 
     /**
-     * @param next {{ next: Object, prev: Object, data: * }}=
-     * @param prev {{ next: Object, prev: Object, data: * }}=
+     * @param next {LinkedListNode}=
+     * @param prev {LinkedListNode}=
      * @param data {*}=
      * @param deleteFn {function(...)}
-     * @returns {{next: Object, prev: Object, data: * }}
+     * @returns {LinkedListNode}
      */
     function newNode(next, prev, data, deleteFn) {
-        return {
-            next: next || null,
-            prev: prev || null,
-            data: data || null,
-            _type: nodeType,
-            _delete: deleteFn
-        };
+        return new LinkedListNode(next, prev, data, deleteFn);
     }
 
     /**
-     * @param obj {Object}
-     * @param next {{ next: Object=, prev: Object=, data: *= }}=
-     * @param prev {{ next: Object=, prev: Object=, data: *= }}=
+     * @param obj {LinkedListNode}
+     * @param next {LinkedListNode}=
+     * @param prev {LinkedListNode}=
      * @param data {*}=
      * @param deleteFn {function(...)}
-     * @returns {{next: Object, prev: Object, data: * }}
+     * @returns {LinkedListNode}
      */
     function recycleNode(obj, next, prev, data, deleteFn) {
-        obj.next = next;
-        obj.prev = prev;
-        obj.data = data;
-        obj._delete = deleteFn;
-        return obj;
+        return obj.recycle(next, prev, data, deleteFn);
     }
 
     /**
@@ -246,6 +132,10 @@ angular.module('JSVida-List', [
          *  Delete a node
          */
         function doDelete() {
+            if (node._isDeleted) {
+                $log.warn('LinkedList: node deleted twice?');
+                return null;
+            }
             if (node === that.head) {
                 return that.shift();
             }
@@ -254,6 +144,7 @@ angular.module('JSVida-List', [
             }
             node.next.prev = node.prev;
             node.prev.next = node.next;
+
             // return node for recycling
             pool.put(node);
             return node.data;
@@ -281,11 +172,8 @@ angular.module('JSVida-List', [
             return;
         }
 
-        var n = pool.get();
-        n.prev = this.tail;
-        n.next = null;
-        n.data = val;
-        n._delete = getDelete.call(this, n);
+        var n = pool.get(null, this.tail, val);
+        n.wrapDelete(getDelete.call(this, n));
         this.tail.next = n;
         this.tail = n;
 
@@ -312,11 +200,8 @@ angular.module('JSVida-List', [
             return;
         }
 
-        var n = pool.get();
-        n.next = this.head;
-        n.prev = null;
-        n.data = val;
-        n._delete = getDelete.call(this, n);
+        var n = pool.get(this.head, null, val);
+        n.wrapDelete(getDelete.call(this, n));
         this.head.prev = n;
         this.head = n;
         this.length += 1;
@@ -424,12 +309,12 @@ angular.module('JSVida-List', [
 
         this.length = 0;
         this.config = validateConfig(conf);
-        this.head = pool.get(null, null, null, angular.noop);
-        this.tail = pool.get(null, null, null, angular.noop);
+        this.head = pool.get(null, null, null);
+        this.tail = pool.get(null, null, null);
         this.head.next = this.tail;
         this.tail.prev = this.head;
-        this.head.delete = getDelete.call(this, this.head);
-        this.tail.delete = getDelete.call(this, this.tail);
+        this.head.wrapDelete(getDelete.call(this, this.head));
+        this.tail.wrapDelete(getDelete.call(this, this.tail));
     }
 
     LinkedList.prototype.push = push;
@@ -441,3 +326,4 @@ angular.module('JSVida-List', [
 
     return LinkedList;
 }]);
+
