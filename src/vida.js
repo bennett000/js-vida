@@ -80,12 +80,43 @@ angular.module('JSVida', [
     scene.scene.add(ground);
 
 
-}]).factory('makeListener', ['$timeout', '$log', function ($timeout, $log) {
+}]).factory('argsToArray', [function () {
     'use strict';
 
-    function makeListener(obj) {
+    /**
+     * @param args {arguments}
+     * @param startVal {number}
+     * @returns {Array}
+     */
+    function argsToArray(args, startVal) {
+        var result = [], i;
+        startVal = +startVal || 0;
+        if (startVal < 0) {
+            startVal = 0;
+        }
+        if (startVal >= args.length) {
+            startVal = args.length - 1;
+        }
+        for (i = startVal; i < args.length; i += 1) {
+            result.push(args);
+        }
+        return result;
+    }
+
+    return argsToArray;
+
+}]).factory('makeListener', ['$timeout', '$log', 'argsToArray', function ($timeout, $log, argsToArray) {
+    'use strict';
+
+    function makeListener(obj, unsafe) {
         obj = obj || {};
-        var listeners = Object.create(null);
+        var listeners = Object.create(null),
+            /** @type {function(...)} */
+            callFn = safeCall;
+
+        if (unsafe) {
+            callFn = unSafeCall;
+        }
 
         function uid() {
             return Date.now().toString(16) + Math.random();
@@ -110,10 +141,18 @@ angular.module('JSVida', [
          * @param msg {string}
          */
         function trigger(msg) {
-            var args = Array.prototype.slice.call(arguments, 0);
+            var args = argsToArray(msg, 1);
             $timeout(function callTrigger() {
                 triggerSync.apply(null, args);
             }, 0);
+        }
+
+        /**
+         * @param fn {function (...)}
+         * @param args {Array}
+         */
+        function unSafeCall(fn, args) {
+            fn.apply(null, args);
         }
 
         /**
@@ -140,7 +179,7 @@ angular.module('JSVida', [
             }
             var args = Array.prototype.slice.call(arguments, 1);
             Object.keys(listeners[msg]).forEach(function (uid) {
-                safeCall(listeners[msg][uid], args);
+                callFn(listeners[msg][uid], args);
             });
         }
 
@@ -157,7 +196,7 @@ angular.module('JSVida', [
 }]).factory('planetConway', ['textureSphere', 'three', 'between', 'Conway', 'Bitmap', function (textureSphere, three, between, Conway, Bitmap) {
     'use strict';
 
-    var res = 128,
+    var res = 512,
         map = new Bitmap({
                              x: res,
                              y: res,
@@ -226,8 +265,8 @@ angular.module('JSVida', [
         planet.position.y = 3;
         planet.position.z = 5;
 
-        c.on('update', onUpdate);
-        c.on('tick', onTick);
+        c.onUpdate(onUpdate);
+        c.onTick(onTick);
         c.start().walk(function (el, x, y) {
             if (el === 1) {
                 map.setPixel(x, y, colours.life.r, colours.life.g,
@@ -250,10 +289,10 @@ angular.module('JSVida', [
     return getPlanet;
 }])
 .run(['scene', 'planetConway', 'universe', function (scene, planetConway, universe) {
-    'use strict';
+         'use strict';
 
-    scene.scene.add(planetConway());
-}])
+         scene.scene.add(planetConway());
+     }])
 //.run(['universe', 'procomyte', function (universe, procomyte) {
 //    'use strict';
 //

@@ -64,6 +64,7 @@ angular.module('JSVida-Map2D', []).factory('xyToOffset', [function () {
         this.y = +y || 0;
 
         this.data = data;
+        this.isScanned = false;
 
         this.tl = tl || null;
         this.t = t || null;

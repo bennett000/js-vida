@@ -67,15 +67,14 @@ angular.module('JSVida-ObjectPool', []).factory('ObjectPool', [function () {
 
 
         /**
+         * arguments do not scale well which is sadly why this is fixed
          * @returns {*}
          */
-        function get() {
-            var args = Array.prototype.slice.call(arguments, 0);
+        function get(a, b, c, d, e, f, g) {
             if (pool.length) {
-                return conf.recycle.apply(null,
-                                                  [pool.pop()].concat(args));
+                return conf.recycle(pool.pop(), a, b, c, d, e, f, g);
             }
-            return conf.factory.apply(null, args);
+            return conf.factory(a, b, c, d, e, f, g);
         }
 
         /**

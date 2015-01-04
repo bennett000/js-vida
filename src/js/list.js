@@ -34,8 +34,7 @@ angular.module('JSVida-List', [
         var that = this;
 
         function doDelete() {
-            var result = deleteFn.apply(null,
-                                  Array.prototype.slice.call(arguments, 0));
+            var result = deleteFn();
             that._isDeleted = true;
             that.prev = null;
             that.next = null;
@@ -267,34 +266,60 @@ angular.module('JSVida-List', [
     }
 
     /**
+     * @param callback {function(...)}
+     * @returns {LinkedList}
+     */
+    function walkForwards(callback) {
+        /*jshint validthis:true */
+        var obj = this.head;
+        if (obj.data) {
+            callback(obj.data, obj._delete);
+        }
+        while (obj.next !== null) {
+            if (obj.next.data) {
+                callback(obj.next.data, obj.next._delete);
+            }
+            obj = obj.next;
+        }
+        return this;
+
+    }
+
+    /**
+     * @param callback {function(...)}
+     * @returns {LinkedList}
+     */
+    function walkBackwards(callback) {
+        /*jshint validthis:true */
+        var obj = this.tail;
+        if (obj.data) {
+            callback.call(null, obj.data, obj._delete);
+        }
+
+        while (obj.prev !== null) {
+            if (obj.prev.data) {
+                callback(obj.prev.data, obj.prev._delete);
+            }
+            obj = obj.prev;
+        }
+        return this;
+    }
+
+    /**
      * @param callback {function(*, function)}
      * @param direction {string} 'reverse' forces iterator to start at tail
-     * @returns {walk}
+     * @returns {LinkedList}
      */
     function walk(callback, direction) {
         /*jshint validthis:true */
         if (!angular.isFunction(callback)) {
             return this;
         }
-        var obj;
         if (direction === 'reverse') {
-            direction = 'prev';
-            obj = this.tail;
+            return this.walkBackwards(callback);
         } else {
-            direction = 'next';
-            obj = this.head;
+            return this.walkForwards(callback);
         }
-        if (this.head.data) {
-            callback.call(null, obj.data, obj._delete);
-        }
-        while (obj[direction] !== null) {
-            if (obj[direction].data) {
-                callback.call(null, obj[direction].data,
-                              obj[direction]._delete);
-            }
-            obj = obj[direction];
-        }
-        return this;
     }
 
     /**
@@ -323,6 +348,8 @@ angular.module('JSVida-List', [
     LinkedList.prototype.shift = shift;
     LinkedList.prototype.walk = walk;
     LinkedList.prototype.forEach = walk;
+    LinkedList.prototype.walkForwards = walkForwards;
+    LinkedList.prototype.walkBackwards = walkBackwards;
 
     return LinkedList;
 }]);
