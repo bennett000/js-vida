@@ -102,9 +102,9 @@ angular.module('JSVida-Conway', [
     }
 
     /**
-     * @param changes {Array.<function(...)>}
+     * Brute force algorithm
      */
-    function brute(changes) {
+    function brute() {
         /*jshint validthis:true */
         var that = this, isAlive, offsetTemp = {x: 0, y: 0};
         this.map.walk(function bruteWalk(data, x, y, cell) {
@@ -117,7 +117,7 @@ angular.module('JSVida-Conway', [
 
             // change any of the changers
             if (data !== change) {
-                changes.push(function () {
+                that.changes.push(function () {
                     cell.data = change;
                 });
                 that.triggerUpdate(x, y, isAlive);
@@ -157,22 +157,21 @@ angular.module('JSVida-Conway', [
         return 0;
     }
 
-    function lifeScanCell(changes, cell, deleteFn) {
+    function lifeScanCell(cell, deleteFn) {
 
     }
 
     /**
-     * @param changes {Array.<function>}
      * @param cell {Map2dCell}
      * @param deleteFn {function(...)}
      */
-    function lifeScanMainCell(changes, cell, deleteFn) {
+    function lifeScanMainCell(cell, deleteFn) {
         /*jshint validthis:true */
         // process main cell, which must be alive, but it can die
         if (!this.processCell(cell)) {
             // trigger
             this.triggerUpdate(cell.x, cell.y, false);
-            changes.push(function deathOrigin() {
+            this.changes.push(function deathOrigin() {
                 cell.data = 0;
                 deleteFn();
             });
@@ -180,30 +179,27 @@ angular.module('JSVida-Conway', [
     }
 
     /**
-     * @param changes {Array.<function(...)>}
      * @param cell {Map2dCell}
      */
-    function lifeScanNeighbour(changes, cell) {
+    function lifeScanNeighbour(cell) {
         /*jshint validthis:true*/
         var that = this,
-            change,
-            key = cell.x + '.' + cell.y;
+            change;
 
         if (cell.isScanned) {
             return;
         }
         cell.isScanned = true;
-        changes.push(function unscan() {
+        this.changes.push(function unscan() {
             cell.isScanned = false;
         });
-        change  = this.processCell(cell);
-
+        change = this.processCell(cell);
 
 
         // register births
         if (change === 1) {
             that.triggerUpdate(cell.x, cell.y, true);
-            changes.push(function lifeScanBirth() {
+            that.changes.push(function lifeScanBirth() {
                 cell.data = 1;
                 that.livingList.push(cell);
             });
@@ -211,48 +207,47 @@ angular.module('JSVida-Conway', [
     }
 
     /**
-     * @param changes {Array.<function(...)>}
      * @param cell {Map2dCell}
      */
-    function lifeScanNeighbours(changes, cell) {
+    function lifeScanNeighbours(cell) {
         /*jshint validthis:true*/
         if (cell.tl.data === 0) {
-            this.lifeScanNeighbour(changes, cell.tl);
+            this.lifeScanNeighbour(cell.tl);
         }
 
         if (cell.t.data === 0) {
-            this.lifeScanNeighbour(changes, cell.t);
+            this.lifeScanNeighbour(cell.t);
         }
 
         if (cell.tr.data === 0) {
-            this.lifeScanNeighbour(changes, cell.tr);
+            this.lifeScanNeighbour(cell.tr);
         }
 
         if (cell.bl.data === 0) {
-            this.lifeScanNeighbour(changes, cell.bl);
+            this.lifeScanNeighbour(cell.bl);
         }
 
         if (cell.b.data === 0) {
-            this.lifeScanNeighbour(changes, cell.b);
+            this.lifeScanNeighbour(cell.b);
         }
 
         if (cell.br.data === 0) {
-            this.lifeScanNeighbour(changes, cell.br);
+            this.lifeScanNeighbour(cell.br);
         }
 
         if (cell.l.data === 0) {
-            this.lifeScanNeighbour(changes, cell.l);
+            this.lifeScanNeighbour(cell.l);
         }
 
         if (cell.r.data === 0) {
-            this.lifeScanNeighbour(changes, cell.r);
+            this.lifeScanNeighbour(cell.r);
         }
     }
 
     /**
-     * @param changes {Array.<function(...)>}
+     * lifeList scan algorithm
      */
-    function lifeScan(changes) {
+    function lifeScan() {
         /*jshint validthis:true */
         var that = this;
 
@@ -261,8 +256,8 @@ angular.module('JSVida-Conway', [
          * @param deleteFn {function(...)}
          */
         function lifeScanWalk(cell, deleteFn) {
-            that.lifeScanMainCell(changes, cell, deleteFn);
-            that.lifeScanNeighbours(changes, cell);
+            that.lifeScanMainCell(cell, deleteFn);
+            that.lifeScanNeighbours(cell);
         }
 
         this.livingList.walk(lifeScanWalk);
@@ -388,19 +383,19 @@ angular.module('JSVida-Conway', [
         }
 
         function onTick() {
-            var changes = [],
-                /** @type {number} */
-                start = +Date.now();
+            /** @type {number} */
+            var start = +Date.now();
+            that.changes = [];
 
             if (doStop) {
                 doStop = false;
                 isRunning = false;
                 return;
             }
-            //that.brute(changes);
-            that.lifeScan(changes);
+            //that.brute();
+            that.lifeScan();
             that.triggerTick();
-            changes.forEach(function changeApplicatior(change) {
+            that.changes.forEach(function changeApplicatior(change) {
                 change();
             });
 
@@ -430,7 +425,7 @@ angular.module('JSVida-Conway', [
         }
 
         function init() {
-            /** @type {Array.<{ x: number, y: number}>} */
+            that.changes = [];
             that.livingList = new LinkedList();
             // Initialize Buffers
             that.map = new Map2d(that.config).walk(function zero(data, x, y, cell) {

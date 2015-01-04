@@ -111,6 +111,24 @@ angular.module('JSVida-List', [
     }
 
     /**
+     * @param next {LinkedListNode}=
+     * @param prev {LinkedListNode}=
+     * @param data {*}=
+     * @param deleteFn {function(...)}
+     * @returns {LinkedListNode}
+     */
+    function getNode(next, prev, data, deleteFn) {
+        /*jshint validthis:true */
+        var n;
+        if (this.garbage) {
+            n = this.garbage;
+            this.garbage = n.next;
+            return n.recycle(next, prev, data, deleteFn)
+        }
+        return pool.get(next, prev, data, deleteFn);
+    }
+
+    /**
      * @param conf {{}}=
      * @returns {{}}
      */
@@ -171,7 +189,7 @@ angular.module('JSVida-List', [
             return;
         }
 
-        var n = pool.get(null, this.tail, val);
+        var n = this.getNode(null, this.tail, val);
         n.wrapDelete(getDelete.call(this, n));
         this.tail.next = n;
         this.tail = n;
@@ -199,7 +217,7 @@ angular.module('JSVida-List', [
             return;
         }
 
-        var n = pool.get(this.head, null, val);
+        var n = this.getNode(this.head, null, val);
         n.wrapDelete(getDelete.call(this, n));
         this.head.prev = n;
         this.head = n;
@@ -322,6 +340,16 @@ angular.module('JSVida-List', [
         }
     }
 
+    function trunc() {
+        /*jshint validthis:true */
+        this.garbage = this.head.next;
+        this.head.data = null;
+        this.head.next = this.tail;
+        this.tail.data = null;
+        this.tail.prev = this.head;
+        this.length = 0;
+    }
+
     /**
      * @param conf {{}}=
      * @returns {LinkedList}
@@ -332,10 +360,11 @@ angular.module('JSVida-List', [
             return new LinkedList(conf);
         }
 
+        this.garbage = null;
         this.length = 0;
         this.config = validateConfig(conf);
-        this.head = pool.get(null, null, null);
-        this.tail = pool.get(null, null, null);
+        this.head = this.getNode(null, null, null);
+        this.tail = this.getNode(null, null, null);
         this.head.next = this.tail;
         this.tail.prev = this.head;
         this.head.wrapDelete(getDelete.call(this, this.head));
@@ -350,6 +379,8 @@ angular.module('JSVida-List', [
     LinkedList.prototype.forEach = walk;
     LinkedList.prototype.walkForwards = walkForwards;
     LinkedList.prototype.walkBackwards = walkBackwards;
+    LinkedList.prototype.trunc = trunc;
+    LinkedList.prototype.getNode = getNode;
 
     return LinkedList;
 }]);

@@ -107,15 +107,14 @@ function getTestConway(testAlgorithm) {
                    [0, 0, 0, 0, 0]
                ];
 
-               var c = new Conway(validConfig),
-                   changes = [];
+               var c = new Conway(validConfig);
 
-               c[testAlgorithm](changes);
+               c[testAlgorithm]();
                // changes not made
                expect(c.map.get(2, 2)).toBe(0);
-               changes.forEach(run);
+               c.changes.forEach(run);
                // changes made
-               expect(changes.length).toBe(1);
+               expect(c.changes.length).toBe(1);
            }));
 
         it(testAlgorithm + ' should make the expected changes - I',
@@ -128,12 +127,11 @@ function getTestConway(testAlgorithm) {
                    [0, 0, 0, 0, 0]  // [0, 0, 0, 0, 0]
                ];
 
-               var c = new Conway(validConfig),
-                   changes = [];
+               var c = new Conway(validConfig);
 
-               c[testAlgorithm](changes);
-               changes.forEach(run);
-               expect(changes.length).toBe(1);
+               c[testAlgorithm]();
+               c.changes.forEach(run);
+               expect(c.changes.length).toBe(1);
                expect(c.map.get(2, 2)).toBe(1);
            }));
 
@@ -146,12 +144,11 @@ function getTestConway(testAlgorithm) {
                    [0, 0, 0, 0, 0], // [0, 0, 0, 0, 0]
                    [0, 0, 0, 0, 0]  // [0, 0, 0, 0, 0]
                ];
-               var c = new Conway(validConfig),
-                   changes = [];
+               var c = new Conway(validConfig);
 
-               c[testAlgorithm](changes);
-               changes.forEach(run);
-               expect(changes.length).toBe(4);
+               c[testAlgorithm]();
+               c.changes.forEach(run);
+               expect(c.changes.length).toBe(4);
                expect(c.map.get(0, 2)).toBe(1);
                expect(c.map.get(1, 2)).toBe(0);
                expect(c.map.get(2, 2)).toBe(0);
@@ -168,12 +165,11 @@ function getTestConway(testAlgorithm) {
                    [0, 0, 0, 0, 0]  // [0, 0, 0, 0, 0]
                ];
 
-               var c = new Conway(validConfig),
-                   changes = [];
+               var c = new Conway(validConfig);
 
-               c[testAlgorithm](changes);
-               changes.forEach(run);
-               expect(changes.length).toBe(2);
+               c[testAlgorithm]();
+               c.changes.forEach(run);
+               expect(c.changes.length).toBe(2);
                expect(c.map.get(1, 2)).toBe(0);
                expect(c.map.get(2, 1)).toBe(0);
            }));
@@ -188,22 +184,21 @@ function getTestConway(testAlgorithm) {
                    [0, 0, 0, 0, 0]  // [0, 0, 0, 0, 0] // [0, 0, 0, 0, 0]
                ];
 
-               var c = new Conway(validConfig),
-                   changes = [];
+               var c = new Conway(validConfig);
 
                // turn 1
-               c[testAlgorithm](changes);
-               changes.forEach(run);
-               expect(changes.length).toBe(4);
+               c[testAlgorithm]();
+               c.changes.forEach(run);
+               expect(c.changes.length).toBe(4);
                expect(c.map.get(2, 2)).toBe(1);
                expect(c.map.get(0, 2)).toBe(1);
                expect(c.map.get(1, 1)).toBe(0);
                expect(c.map.get(1, 3)).toBe(0);
                // turn 2
-               changes = [];
-               c[testAlgorithm](changes);
-               changes.forEach(run);
-               expect(changes.length).toBe(4);
+               c.changes.trunc();
+               c[testAlgorithm]();
+               c.changes.forEach(run);
+               expect(c.changes.length).toBe(4);
                expect(c.map.get(2, 2)).toBe(0);
                expect(c.map.get(0, 2)).toBe(0);
                expect(c.map.get(1, 1)).toBe(1);
